@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  AWS
+
+  SAM Template for common resources between NVA stacks
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: NvaCommonResources
+    Description: NVA common resources
+    Author: Unit
+    SpdxLicenseId: MIT
+    LicenseUrl: LICENSE
+    Labels: [ '${CODEBUILD_RESOLVED_SOURCE_VERSION}', '${GIT_REPO}', '@${BUILD_TIMESTAMP}' ]
+
+
+Resources:
+
+  EventsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: eventBrdigeEventBodiesBucket
+      AccessControl: Private
+      LifecycleConfiguration:
+        Rules:
+          - Id: "ExpiryPolicy"
+            ExpirationInDays: 10
+            NoncurrentVersionExpirationInDays: 10
+            Status: Enabled
+      VersioningConfiguration:
+        Status: Suspended
+
+
