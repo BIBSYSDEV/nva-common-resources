@@ -50,7 +50,7 @@ Resources:
     Properties:
       DataType: text
       Description: Parameter containing the default EventBridge bus used in NVA so that other services can be aware of the name of the bus.
-      Name: NVA/Events/EventsBucketName
+      Name: NVA/Events/EventsBusName
       Type: String
       Value: !GetAtt NvaEventsBus.Name
   EventsBucketName:
