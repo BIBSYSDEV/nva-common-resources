@@ -14,13 +14,23 @@ Metadata:
     LicenseUrl: LICENSE
     Labels: [ '${CODEBUILD_RESOLVED_SOURCE_VERSION}', '${GIT_REPO}', '@${BUILD_TIMESTAMP}' ]
 
+Parameters:
+  Suffix:
+    Type: String
+    Default: ''
+    Description: Suffix used for naming resources for feature branches to avoid conflicts.
 
+Conditions:
+  WithSuffix: !Not [ !Equals [ !Ref Suffix, '' ] ]
 Resources:
 
   EventsBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: eventBrdigeEventBodiesBucket
+      BucketName:  !If
+        - WithSuffix
+        - !Sub 'eventBridgeEventBodies-${AWS::AccountId}-${Suffix}'
+        - !Sub 'eventBridgeEventBodies-${AWS::AccountId'
       AccessControl: Private
       LifecycleConfiguration:
         Rules:
