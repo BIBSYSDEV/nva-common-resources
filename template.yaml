@@ -27,7 +27,10 @@ Resources:
   NvaEventsBus:
     Type: AWS::Events::EventBus
     Properties:
-      Name: nva-events-default-bus
+      Name: !If
+        - WithSuffix
+        - !Sub 'nva-events-default-bus-${AWS::AccountId}-${Suffix}'
+        - !Sub 'nva-events-default-bus-${AWS::AccountId'
 
   EventsBucket:
     Type: AWS::S3::Bucket
@@ -50,7 +53,7 @@ Resources:
     Properties:
       DataType: text
       Description: Parameter containing the default EventBridge bus used in NVA so that other services can be aware of the name of the bus.
-      Name: NVA/Events/EventsBusName
+      Name: /NVA/Events/EventsBusName
       Type: String
       Value: !GetAtt NvaEventsBus.Name
   EventsBucketName:
@@ -58,7 +61,7 @@ Resources:
     Properties:
       DataType: text
       Description: Parameter containing the bucket name of EventsBucket so that other services can be aware of the name of the bucket.
-      Name: NVA/Events/EventsBucketName
+      Name: /NVA/Events/EventsBucketName
       Type: String
       Value: !Ref EventsBucket
   EventsBucketArn:
@@ -66,7 +69,7 @@ Resources:
     Properties:
       DataType: text
       Description: Parameter containing the bucket ARN of EventsBucket so that other services can be aware of the name of the bucket.
-      Name: NVA/Events/EventsBucketArn
+      Name: /NVA/Events/EventsBucketArn
       Type: String
       Value: !GetAtt EventsBucket.Arn
 
