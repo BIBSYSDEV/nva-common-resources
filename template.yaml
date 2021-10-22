@@ -30,7 +30,7 @@ Resources:
       Name: !If
         - WithSuffix
         - !Sub 'nva-events-default-bus-${AWS::AccountId}-${Suffix}'
-        - !Sub 'nva-events-default-bus-${AWS::AccountId'
+        - !Sub 'nva-events-default-bus-${AWS::AccountId}'
 
   EventsBucket:
     Type: AWS::S3::Bucket
