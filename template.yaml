@@ -3,6 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   AWS  SAM Template for common resources between NVA stacks
 
+
 Parameters:
   Suffix:
     Type: String
