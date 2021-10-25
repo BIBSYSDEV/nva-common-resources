@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  AWS SAM Template for common resources between NVA stacks
+
+Parameters:
+  Suffix:
+    Type: String
+    Default: ''
+    Description: Suffix used for naming resources for feature branches to avoid conflicts.
+
+Conditions:
+  WithSuffix: !Not [ !Equals [ !Ref Suffix, '' ] ]
+Resources:
+
+  EventsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:  !If
+        - WithSuffix
+        - !Sub 'eventbridge-event-bodies-${AWS::AccountId}-${Suffix}'
+        - !Sub 'eventbridge-event-bodies-${AWS::AccountId}'
+      AccessControl: Private
+      LifecycleConfiguration:
+        Rules:
+          - Id: "ExpiryPolicy"
+            ExpirationInDays: 10
+            NoncurrentVersionExpirationInDays: 10
+            Status: Enabled
+      VersioningConfiguration:
+        Status: Suspended
+
+
