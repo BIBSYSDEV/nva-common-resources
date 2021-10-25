@@ -1,7 +1,8 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  AWS SAM Template for common resources between NVA stacks
+  AWS  SAM Template for common resources between NVA stacks
+
 
 Parameters:
   Suffix:
@@ -12,6 +13,14 @@ Parameters:
 Conditions:
   WithSuffix: !Not [ !Equals [ !Ref Suffix, '' ] ]
 Resources:
+
+  NvaEventsBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: !If
+        - WithSuffix
+        - !Sub 'nva-events-default-bus-${AWS::AccountId}-${Suffix}'
+        - !Sub 'nva-events-default-bus-${AWS::AccountId}'
 
   EventsBucket:
     Type: AWS::S3::Bucket
@@ -24,10 +33,33 @@ Resources:
       LifecycleConfiguration:
         Rules:
           - Id: "ExpiryPolicy"
-            ExpirationInDays: 10
-            NoncurrentVersionExpirationInDays: 10
+            ExpirationInDays: 1
+            NoncurrentVersionExpirationInDays: 1
             Status: Enabled
       VersioningConfiguration:
         Status: Suspended
-
+  EventBusArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: Parameter containing the default EventBridge bus used in NVA so that other services can be aware of the name of the bus.
+      Name: /NVA/Events/EventsBusArn
+      Type: String
+      Value: !GetAtt NvaEventsBus.Arn
+  EventsBucketName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: Parameter containing the bucket name of EventsBucket so that other services can be aware of the name of the bucket.
+      Name: /NVA/Events/EventsBucketName
+      Type: String
+      Value: !Ref EventsBucket
+  EventsBucketArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: Parameter containing the bucket ARN of EventsBucket so that other services can be aware of the name of the bucket.
+      Name: /NVA/Events/EventsBucketArn
+      Type: String
+      Value: !GetAtt EventsBucket.Arn
 
