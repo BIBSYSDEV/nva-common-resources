@@ -1,18 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  AWS
-
-  SAM Template for common resources between NVA stacks
-
-Metadata:
-  AWS::ServerlessRepo::Application:
-    Name: NvaCommonResources
-    Description: NVA common resources
-    Author: Unit
-    SpdxLicenseId: MIT
-    LicenseUrl: LICENSE
-    Labels: [ '${CODEBUILD_RESOLVED_SOURCE_VERSION}', '${GIT_REPO}', '@${BUILD_TIMESTAMP}' ]
+  AWS  SAM Template for common resources between NVA stacks
 
 Parameters:
   Suffix:
