@@ -63,3 +63,34 @@ Resources:
       Type: String
       Value: !GetAtt EventsBucket.Arn
 
+  #This bucket could belong to the NVA Resources service but being there would
+  # prevent us from being able to create and destroy the stack. Also, this bucket is read
+  # by the search service, so it is a common resource by definition. The deletion of
+  # the NVA Resources service stack should not necessarily break the NVA search service
+  ExpandedResourcesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !If
+        - WithSuffix
+        - !Sub 'persisted-resources-${AWS::AccountId}-${Suffix}'
+        - !Sub 'persisted-resources-${AWS::AccountId}'
+      AccessControl: Private
+      VersioningConfiguration:
+        Status: Suspended
+
+  ExpandedResourcesBucketName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: Parameter containing the bucket name of EventsBucket so that other services can be aware of the name of the bucket.
+      Name: /NVA/Events/PersistedEntriesBucketName
+      Type: String
+      Value: !Ref ExpandedResourcesBucket
+  ExpandedResourcesBucketArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: Parameter containing the bucket ARN of EventsBucket so that other services can be aware of the name of the bucket.
+      Name: /NVA/Events/PersistedEntriesBucketArn
+      Type: String
+      Value: !GetAtt ExpandedResourcesBucket.Arn
