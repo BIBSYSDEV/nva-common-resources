@@ -22,6 +22,23 @@ Resources:
         - !Sub 'nva-events-default-bus-${AWS::AccountId}-${Suffix}'
         - !Sub 'nva-events-default-bus-${AWS::AccountId}'
 
+  EventBusArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: Parameter containing the default EventBridge bus used in NVA so that other services can be aware of the name of the bus.
+      Name: /NVA/Events/EventsBusArn
+      Type: String
+      Value: !GetAtt NvaEventsBus.Arn
+  EventBusName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: Parameter containing the default EventBridge bus used in NVA so that other services can be aware of the name of the bus.
+      Name: /NVA/Events/EventsBusName
+      Type: String
+      Value: !GetAtt NvaEventsBus.Name
+
   EventsBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -38,14 +55,7 @@ Resources:
             Status: Enabled
       VersioningConfiguration:
         Status: Suspended
-  EventBusArn:
-    Type: AWS::SSM::Parameter
-    Properties:
-      DataType: text
-      Description: Parameter containing the default EventBridge bus used in NVA so that other services can be aware of the name of the bus.
-      Name: /NVA/Events/EventsBusArn
-      Type: String
-      Value: !GetAtt NvaEventsBus.Arn
+
   EventsBucketName:
     Type: AWS::SSM::Parameter
     Properties:
