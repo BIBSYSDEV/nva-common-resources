@@ -104,3 +104,14 @@ Resources:
       Name: /NVA/Events/PersistedEntriesBucketArn
       Type: String
       Value: !GetAtt ExpandedResourcesBucket.Arn
+
+      
+#================================= URIs for connecting to external services============================================================
+  AlmaApiUri:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: Parameter containing the ALMA API URI
+      Name: REACT_APP_ALMA_API_URL
+      Type: String
+      Value: 'https://bibsys.alma.exlibrisgroup.com/view/sru/47BIBSYS_NETWORK'
