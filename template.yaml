@@ -104,7 +104,10 @@ Resources:
       Name: /NVA/Events/PersistedEntriesBucketArn
       Type: String
       Value: !GetAtt ExpandedResourcesBucket.Arn
-  ALMA_API_URI:
+
+      
+#================================= URIs for connecting to external services============================================================
+  AlmaApiUri:
     Type: AWS::SSM::Parameter
     Properties:
       DataType: text
