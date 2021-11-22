@@ -37,6 +37,9 @@ Parameters:
   Phase:
     Type: String
     Description: dev, stage,test or empty for production
+  ApiGatewayEndpointType:
+    Type: String
+    Description:
   Suffix:
     Type: String
     Default: ''
@@ -137,6 +140,14 @@ Resources:
       Type: String
       Value: !GetAtt ExpandedResourcesBucket.Arn
 
+  DomainName:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      CertificateArn: !Ref BackendDomainCertificateArn
+      DomainName: !Ref CustomDomainParameter
+      EndpointConfiguration:
+        Types:
+          - !Ref ApiGatewayEndpointType
 
 #================================= Parameters ============================================================
 
