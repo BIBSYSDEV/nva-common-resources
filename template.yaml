@@ -145,7 +145,7 @@ Resources:
     Type: AWS::ApiGateway::DomainName
     Properties:
       CertificateArn: !Ref BackendDomainCertificateArn
-      DomainName: !Ref CustomDomainParameter
+      DomainName: !Ref CustomDomain
       EndpointConfiguration:
         Types:
           - !Ref ApiGatewayEndpointType
