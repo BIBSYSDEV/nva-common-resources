@@ -5,6 +5,36 @@ Description: >
 
 
 Parameters:
+  BackendDomainCertificateArn:
+    Type: String
+    Description: ARN for the certificate covering the API host/domain/API Gateway Custom Domain. The value is stored in Region us-east-1.
+  FrontendDomainCertificateArn:
+    Type: String
+    Description: ARN for the certificate covering the API host/domain/API Gateway Custom Domain. The value is stored in Region us-east-1.
+  CustomDomain:
+    Type: String
+    Description: The domain of the NVA related services. This part of the domain is common to both backend and frontend services. Eg. dev.nva.aws.unit.no or nva.unit.no.
+  AlmaApiUri:
+    Type: String
+    Description: URI to Alma API.
+    Default: 'https://bibsys.alma.exlibrisgroup.com/view/sru/47BIBSYS_NETWORK'
+  BareHostUri:
+    Type: String
+    Description: URI to BARE API.
+  DataCiteMdsEndpoint:
+    Type: String
+    Description: URI to Datacite MDS endpoint.
+  DataCiteRestEndpoint:
+    Type: String
+    Description: URI to Datacite Rest endpoint.
+  DataciteEndpointDefaultPort:
+    Type: String
+    Description: Port for communcation with Datacite
+    Default: 443
+  OrcidBaseUrl:
+    Type: String
+    Description: URL for communicating with ORCID
+
   Suffix:
     Type: String
     Default: ''
@@ -106,13 +136,104 @@ Resources:
       Value: !GetAtt ExpandedResourcesBucket.Arn
 
 
-#================================= URIs for connecting to external services============================================================
-  AlmaApiUri:
+#================================= Parameters ============================================================
+
+  PhaseParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Name: phase
+      Description: It contains the phase (environment). E.g dev, sandbox,test, empty for prod.
+
+  AlmaApiUriParameter:
     Type: AWS::SSM::Parameter
     Properties:
       DataType: text
       Description: Parameter containing the ALMA API URI
-      Name: ALMA_API_URI
+      Name: AlmaApiUri
       Type: String
-      Value: 'https://bibsys.alma.exlibrisgroup.com/view/sru/47BIBSYS_NETWORK'
+      Value: !Ref AlmaApiUri
+
+  BackendDomainCertificateArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: ARN for the certificate covering the API host/domain/API Gateway Custom Domain
+      Name: /NVA/BackendDomainCertificate
+      Type: String
+      Value: !Ref BackendDomainCertificateArn
+
+  FrontendDomainCertificateArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: ARN for the certificate covering the API host/domain/API Gateway Custom Domain
+      Name: /NVA/FrontendDomainCertificate
+      Type: String
+      Value: !Ref FrontendDomainCertificateArn
+
+  CustomDomainParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Value for Custom Domain.
+      Name: /NVA/CustomDomain
+      Type: String
+      Value: !Ref CustomDomain
+
+  ApiDomainNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Hostname for API Gateway Custom Domain
+      Name: /NVA/ApiDomainName
+      Type: String
+      Value: !Join [ '.', [ 'api', !Ref CustomDomain ] ]
+
+  ApplicationDomainParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Domain-name for the frontend
+      Name: /NVA/ApplicationDomain
+      Type: String
+      Value: !Join [ '.', [ 'frontend', !Ref CustomDomain ] ]
+
+  BareHostParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Hostname for BARE API
+      Name: BareHost
+      Type: String
+      Value: !Ref BareHostURI
+
+  DataCiteMdsEndpointParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: URI to Datacite MDS endpoint
+      Name: /Datacite/Mds_Endpoint
+      Type: String
+      Value: !Ref DataCiteMdsEndpoint
+
+  DataCiteRestEndpointParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: URI to Datacite MDS endpoint
+      Name: /Datacite/Mds_Endpoint
+      Type: String
+      Value: !Ref DataCiteRestEndpoint
+
+  DataciteEndpointDefaultPortParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Port for communicating with Datacite
+      Name : /Datacite/Port
+      Type: String
+      Value: !Ref DataciteEndpointDefaultPort
+
+  OrcidBaseUrlParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: URL to OrcId service
+      Name: /Orcid/BaseUrl
+      Type: String
+      Value: !Ref OrcidBaseUrl
+
 
