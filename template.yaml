@@ -21,6 +21,20 @@ Parameters:
   BareHostURI:
     Type: String
     Description: URI to BARE API.
+  DataCiteMdsEndpoint:
+    Type: String
+    Description: URI to Datacite MDS endpoint.
+  DataCiteRestEndpoint:
+    Type: String
+    Description: URI to Datacite Rest endpoint.
+  DataciteEndpointDefaultPort:
+    Type: String
+    Description: Port for communcation with Datacite
+    Default: 443
+  OrcidBaseUrl:
+    Type: String
+    Description: URL for communicating with ORCID
+
   Suffix:
     Type: String
     Default: ''
@@ -123,12 +137,20 @@ Resources:
 
 
 #================================= Parameters ============================================================
+
+  PhaseParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Name: phase
+      Description: It contains the phase (environment). E.g dev, sandbox,test, empty for prod.
+
   AlmaApiUriParameter:
     Type: AWS::SSM::Parameter
     Properties:
       DataType: text
       Description: Parameter containing the ALMA API URI
-      Name: ALMA_API_URI
+      Name: AlmaApiUri
       Type: String
       Value: !Ref AlmaApiUri
 
@@ -154,7 +176,7 @@ Resources:
     Type: AWS::SSM::Parameter
     Properties:
       Description: Value for Custom Domain.
-      Name: CustomDomain
+      Name: /NVA/CustomDomain
       Type: String
       Value: !Ref CustomDomain
 
@@ -162,7 +184,7 @@ Resources:
     Type: AWS::SSM::Parameter
     Properties:
       Description: Hostname for API Gateway Custom Domain
-      Name: ApiDomainName
+      Name: /NVA/ApiDomainName
       Type: String
       Value: !Join [ '.', [ 'api', !Ref CustomDomain ] ]
 
@@ -170,7 +192,7 @@ Resources:
     Type: AWS::SSM::Parameter
     Properties:
       Description: Domain-name for the frontend
-      Name: ApplicationDomain
+      Name: /NVA/ApplicationDomain
       Type: String
       Value: !Join [ '.', [ 'frontend', !Ref CustomDomain ] ]
 
@@ -180,15 +202,37 @@ Resources:
       Description: Hostname for BARE API
       Name: BareHost
       Type: String
-      Value: !Ref BareHost
+      Value: !Ref BareHostURI
 
+  DataCiteMdsEndpointParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: URI to Datacite MDS endpoint
+      Name: /Datacite/Mds_Endpoint
+      Type: String
+      Value: !Ref DataCiteMdsEndpoint
 
+  DataCiteRestEndpointParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: URI to Datacite MDS endpoint
+      Name: /Datacite/Mds_Endpoint
+      Type: String
+      Value: !Ref DataCiteRestEndpoint
+
+  DataciteEndpointDefaultPortParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Port for communicating with Datacite
+      Name : /Datacite/Port
+      Type: String
+      Value: !Ref DataciteEndpointDefaultPort
 
   OrcidBaseUrlParameter:
     Type: AWS::SSM::Parameter
     Properties:
       Description: URL to OrcId service
-      Name: OrcidBaseUrl
+      Name: /Orcid/BaseUrl
       Type: String
       Value: !Ref OrcidBaseUrl
 
