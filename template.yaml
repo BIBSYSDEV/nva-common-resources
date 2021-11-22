@@ -112,6 +112,7 @@ Resources:
     Properties:
       DataType: text
       Description: Parameter containing the ALMA API URI
-      Name: REACT_APP_ALMA_API_URL
+      Name: ALMA_API_URI
       Type: String
       Value: 'https://bibsys.alma.exlibrisgroup.com/view/sru/47BIBSYS_NETWORK'
+
