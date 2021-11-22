@@ -5,7 +5,10 @@ Description: >
 
 
 Parameters:
-  DomainCertificateArn:
+  BackendDomainCertificateArn:
+    Type: String
+    Description: ARN for the certificate covering the API host/domain/API Gateway Custom Domain. The value is stored in Region us-east-1.
+  FrontendDomainCertificateArn:
     Type: String
     Description: ARN for the certificate covering the API host/domain/API Gateway Custom Domain. The value is stored in Region us-east-1.
   CustomDomain:
@@ -129,14 +132,23 @@ Resources:
       Type: String
       Value: !Ref AlmaApiUri
 
-  DomainCertificateArnParameter:
+  BackendDomainCertificateArnParameter:
     Type: AWS::SSM::Parameter
     Properties:
       DataType: text
       Description: ARN for the certificate covering the API host/domain/API Gateway Custom Domain
-      Name: /NVA/DomainCertificate
+      Name: /NVA/BackendDomainCertificate
       Type: String
-      Value: !Ref DomainCertificateArn
+      Value: !Ref BackendDomainCertificateArn
+
+  FrontendDomainCertificateArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: ARN for the certificate covering the API host/domain/API Gateway Custom Domain
+      Name: /NVA/FrontendDomainCertificate
+      Type: String
+      Value: !Ref FrontendDomainCertificateArn
 
   CustomDomainParameter:
     Type: AWS::SSM::Parameter
