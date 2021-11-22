@@ -220,7 +220,7 @@ Resources:
     Type: AWS::SSM::Parameter
     Properties:
       Description: URI to Datacite MDS endpoint
-      Name: /Datacite/Mds_Endpoint
+      Name: /Datacite/Rest_Endpoint
       Type: String
       Value: !Ref DataCiteRestEndpoint
 
