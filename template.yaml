@@ -5,6 +5,19 @@ Description: >
 
 
 Parameters:
+  DomainCertificateArn:
+    Type: String
+    Description: ARN for the certificate covering the API host/domain/API Gateway Custom Domain. The value is stored in Region us-east-1.
+  CustomDomain:
+    Type: String
+    Description: The domain of the NVA related services. This part of the domain is common to both backend and frontend services. Eg. dev.nva.aws.unit.no or nva.unit.no.
+  AlmaApiUri:
+    Type: String
+    Description: URI to Alma API.
+    Default: 'https://bibsys.alma.exlibrisgroup.com/view/sru/47BIBSYS_NETWORK'
+  BareHostURI:
+    Type: String
+    Description: URI to BARE API.
   Suffix:
     Type: String
     Default: ''
@@ -106,13 +119,65 @@ Resources:
       Value: !GetAtt ExpandedResourcesBucket.Arn
 
 
-#================================= URIs for connecting to external services============================================================
-  AlmaApiUri:
+#================================= Parameters ============================================================
+  AlmaApiUriParameter:
     Type: AWS::SSM::Parameter
     Properties:
       DataType: text
       Description: Parameter containing the ALMA API URI
       Name: ALMA_API_URI
       Type: String
-      Value: 'https://bibsys.alma.exlibrisgroup.com/view/sru/47BIBSYS_NETWORK'
+      Value: !Ref AlmaApiUri
+
+  DomainCertificateArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: ARN for the certificate covering the API host/domain/API Gateway Custom Domain
+      Name: /NVA/DomainCertificate
+      Type: String
+      Value: !Ref DomainCertificateArn
+
+  CustomDomainParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Value for Custom Domain.
+      Name: CustomDomain
+      Type: String
+      Value: !Ref CustomDomain
+
+  ApiDomainNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Hostname for API Gateway Custom Domain
+      Name: ApiDomainName
+      Type: String
+      Value: !Join [ '.', [ 'api', !Ref CustomDomain ] ]
+
+  ApplicationDomainParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Domain-name for the frontend
+      Name: ApplicationDomain
+      Type: String
+      Value: !Join [ '.', [ 'frontend', !Ref CustomDomain ] ]
+
+  BareHostParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Hostname for BARE API
+      Name: BareHost
+      Type: String
+      Value: !Ref BareHost
+
+
+
+  OrcidBaseUrlParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: URL to OrcId service
+      Name: OrcidBaseUrl
+      Type: String
+      Value: !Ref OrcidBaseUrl
+
 
