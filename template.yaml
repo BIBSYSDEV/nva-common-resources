@@ -39,7 +39,8 @@ Parameters:
     Description: dev, stage,test or empty for production
   ApiGatewayEndpointType:
     Type: String
-    Description:
+    Default: EDGE
+    Description: The ApiGateway Endpoint Type
   Suffix:
     Type: String
     Default: ''
