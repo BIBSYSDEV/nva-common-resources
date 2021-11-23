@@ -300,7 +300,7 @@ Resources:
     Type: AWS::SSM::Parameter
     Properties:
       Description: URL to OrcId service
-      Name: /Orcid/BaseUrl
+      Name: OrcidBaseUrl
       Type: String
       Value: !Ref OrcidBaseUrl
 
