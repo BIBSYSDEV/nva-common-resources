@@ -66,6 +66,7 @@ Resources:
       Name: /NVA/Events/EventsBusArn
       Type: String
       Value: !GetAtt NvaEventsBus.Arn
+
   EventBusName:
     Type: AWS::SSM::Parameter
     Properties:
@@ -92,22 +93,6 @@ Resources:
       VersioningConfiguration:
         Status: Suspended
 
-  EventsBucketName:
-    Type: AWS::SSM::Parameter
-    Properties:
-      DataType: text
-      Description: Parameter containing the bucket name of EventsBucket so that other services can be aware of the name of the bucket.
-      Name: /NVA/Events/EventsBucketName
-      Type: String
-      Value: !Ref EventsBucket
-  EventsBucketArn:
-    Type: AWS::SSM::Parameter
-    Properties:
-      DataType: text
-      Description: Parameter containing the bucket ARN of EventsBucket so that other services can be aware of the name of the bucket.
-      Name: /NVA/Events/EventsBucketArn
-      Type: String
-      Value: !GetAtt EventsBucket.Arn
 
   #This bucket could belong to the NVA Resources service but being there would
   # prevent us from being able to create and destroy the stack. Also, this bucket is read
@@ -126,31 +111,47 @@ Resources:
 
   ResourceStorageBucket:
     Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
     Properties:
       BucketName: !If
         - WithSuffix
         - !Sub 'nva-resource-storage-${AWS::AccountId}-${Suffix}'
         - !Sub 'nva-resource-storage-${AWS::AccountId}'
-      AccessControl: Private
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, PUT, POST, HEAD]
+            AllowedOrigins: ['*']
+            ExposedHeaders: [ETag]
+      LifecycleConfiguration:
+        Rules:
+          - Id: RemoveFailedUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
       VersioningConfiguration:
         Status: Enabled
 
-  ExpandedResourcesBucketName:
-    Type: AWS::SSM::Parameter
+  NVAStorageBucketPolicy:
+    Type: AWS::S3::BucketPolicy
     Properties:
-      DataType: text
-      Description: Parameter containing the bucket name of EventsBucket so that other services can be aware of the name of the bucket.
-      Name: /NVA/Events/PersistedEntriesBucketName
-      Type: String
-      Value: !Ref ExpandedResourcesBucket
-  ExpandedResourcesBucketArn:
-    Type: AWS::SSM::Parameter
-    Properties:
-      DataType: text
-      Description: Parameter containing the bucket ARN of EventsBucket so that other services can be aware of the name of the bucket.
-      Name: /NVA/Events/PersistedEntriesBucketArn
-      Type: String
-      Value: !GetAtt ExpandedResourcesBucket.Arn
+      Bucket: !Ref ResourceStorageBucket
+      PolicyDocument:
+        Statement:
+          - Action:
+              - "s3:GetObject"
+              - "s3:PutObject"
+              - "s3:AbortMultipartUpload"
+              - "s3:ListMultipartUploadParts"
+              - "s3:ListBucketMultipartUploads"
+            Effect: "Allow"
+            Resource:
+              - !Sub 'arn:aws:s3:::${NVAStorageBucket}'
+              - !Sub 'arn:aws:s3:::${NVAStorageBucket}/*'
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+
 
   BackendDomainName:
     Type: AWS::ApiGateway::DomainName
@@ -163,6 +164,24 @@ Resources:
 
 #================================= Parameters ============================================================
 
+  EventsBucketName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: Parameter containing the bucket name of EventsBucket so that other services can be aware of the name of the bucket.
+      Name: /NVA/Events/EventsBucketName
+      Type: String
+      Value: !Ref EventsBucket
+
+  EventsBucketArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: Parameter containing the bucket ARN of EventsBucket so that other services can be aware of the name of the bucket.
+      Name: /NVA/Events/EventsBucketArn
+      Type: String
+      Value: !GetAtt EventsBucket.Arn
+
   ResourcesStorageBucketName:
     Type: AWS::SSM::Parameter
     Properties:
@@ -171,6 +190,23 @@ Resources:
       Description: The actual published data. E.g. Journal papers, Datasets etc.
       Type: String
       Value: !Ref ResourceStorageBucket
+
+  ExpandedResourcesBucketName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: Parameter containing the bucket name of EventsBucket so that other services can be aware of the name of the bucket.
+      Name: /NVA/Events/PersistedEntriesBucketName
+      Type: String
+      Value: !Ref ExpandedResourcesBucket
+    ExpandedResourcesBucketArn:
+      Type: AWS::SSM::Parameter
+      Properties:
+        DataType: text
+        Description: Parameter containing the bucket ARN of EventsBucket so that other services can be aware of the name of the bucket.
+        Name: /NVA/Events/PersistedEntriesBucketArn
+        Type: String
+        Value: !GetAtt ExpandedResourcesBucket.Arn
 
   PhaseParameter:
     Type: AWS::SSM::Parameter
@@ -208,13 +244,13 @@ Resources:
       Type: String
       Value: !Ref FrontendDomainCertificateArn
 
-  CustomDomainParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: Value for Custom Domain.
-      Name: /NVA/CustomDomain
-      Type: String
-      Value: !Ref CustomDomain
+#  CustomDomainParameter:
+#    Type: AWS::SSM::Parameter
+#    Properties:
+#      Description: Value for Custom Domain.
+#      Name: /NVA/CustomDomain
+#      Type: String
+#      Value: !Ref CustomDomain
 
   LegacyCustomDomainParameter:
     Type: AWS::SSM::Parameter
@@ -228,7 +264,7 @@ Resources:
     Type: AWS::SSM::Parameter
     Properties:
       Description: Hostname for API Gateway Custom Domain
-      Name: /NVA/ApiDomainName
+      Name: /NVA/ApiDomain
       Type: String
       Value: !Join [ '.', [ 'api', !Ref CustomDomain ] ]
 
@@ -252,7 +288,7 @@ Resources:
     Type: AWS::SSM::Parameter
     Properties:
       Description: URI to Datacite MDS endpoint
-      Name: /Datacite/MdsEndpoint
+      Name: dataCiteMdsHost
       Type: String
       Value: !Ref DataCiteMdsEndpoint
 
@@ -260,35 +296,11 @@ Resources:
     Type: AWS::SSM::Parameter
     Properties:
       Description: URI to Datacite MDS endpoint
-      Name: /Datacite/RestEndpoint
-      Type: String
-      Value: !Ref DataCiteRestEndpoint
-
-  DataciteEndpointDefaultPortParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: Port for communicating with Datacite
-      Name : /Datacite/Port
-      Type: String
-      Value: !Ref DataciteEndpointDefaultPort
-
-  LegacyDataCiteMdsEndpointParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: URI to Datacite MDS endpoint
-      Name: dataCiteMdsHost
-      Type: String
-      Value: !Ref DataCiteMdsEndpoint
-
-  LegacyDataCiteRestEndpointParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: URI to Datacite MDS endpoint
       Name: dataCiteRestHost
       Type: String
       Value: !Ref DataCiteRestEndpoint
 
-  LegacyDataciteEndpointDefaultPortParameter:
+  DataciteEndpointDefaultPortParameter:
     Type: AWS::SSM::Parameter
     Properties:
       Description: Port for communicating with Datacite
@@ -303,5 +315,3 @@ Resources:
       Name: OrcidBaseUrl
       Type: String
       Value: !Ref OrcidBaseUrl
-
-
