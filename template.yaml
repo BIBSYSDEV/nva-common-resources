@@ -124,6 +124,17 @@ Resources:
       VersioningConfiguration:
         Status: Suspended
 
+  ResourceStorageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !If
+        - WithSuffix
+        - !Sub 'nva-resource-storage-${AWS::AccountId}-${Suffix}'
+        - !Sub 'nva-resource-storage-${AWS::AccountId}'
+      AccessControl: Private
+      VersioningConfiguration:
+        Status: Enabled
+
   ExpandedResourcesBucketName:
     Type: AWS::SSM::Parameter
     Properties:
@@ -141,15 +152,6 @@ Resources:
       Type: String
       Value: !GetAtt ExpandedResourcesBucket.Arn
 
-#  DomainName:
-#    Type: AWS::ApiGateway::DomainName
-#    Properties:
-#      CertificateArn: !Ref BackendDomainCertificateArn
-#      DomainName: !Ref CustomDomain
-#      EndpointConfiguration:
-#        Types:
-#          - !Ref ApiGatewayEndpointType
-
   BackendDomainName:
     Type: AWS::ApiGateway::DomainName
     Properties:
@@ -158,21 +160,17 @@ Resources:
       EndpointConfiguration:
         Types:
           - !Ref ApiGatewayEndpointType
-#  FrontendDomainName:
-#    Type: AWS::ApiGateway::DomainName
-#    Properties:
-#      CertificateArn: !Ref BackendDomainCertificateArn
-#      DomainName: !Sub 'frontend.${CustomDomain}'
-#      EndpointConfiguration:
-#        Types:
-#          - !Ref ApiGatewayEndpointType
 
 #================================= Parameters ============================================================
 
-  PublicationData:
+  ResourcesStorageBucketName:
     Type: AWS::SSM::Parameter
     Properties:
       DataType: text
+      Name: /NVA/PublicationData
+      Description: The actual published data. E.g. Journal papers, Datasets etc.
+      Type: String
+      Value: !Ref ResourceStorageBucket
 
   PhaseParameter:
     Type: AWS::SSM::Parameter
