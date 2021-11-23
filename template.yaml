@@ -269,6 +269,30 @@ Resources:
       Type: String
       Value: !Ref DataciteEndpointDefaultPort
 
+  Legacy DataCiteMdsEndpointParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: URI to Datacite MDS endpoint
+      Name: dataCiteMdsHost
+      Type: String
+      Value: !Ref DataCiteMdsEndpoint
+
+  LegacyDataCiteRestEndpointParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: URI to Datacite MDS endpoint
+      Name: dataCiteRestHost
+      Type: String
+      Value: !Ref DataCiteRestEndpoint
+
+  LegacyDataciteEndpointDefaultPortParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Port for communicating with Datacite
+      Name: dataCitePort
+      Type: String
+      Value: !Ref DataciteEndpointDefaultPort
+
   OrcidBaseUrlParameter:
     Type: AWS::SSM::Parameter
     Properties:
