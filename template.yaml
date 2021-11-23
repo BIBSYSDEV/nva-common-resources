@@ -143,8 +143,8 @@ Resources:
               - "s3:ListBucketMultipartUploads"
             Effect: "Allow"
             Resource:
-              - !Sub 'arn:aws:s3:::${NVAStorageBucket}'
-              - !Sub 'arn:aws:s3:::${NVAStorageBucket}/*'
+              - !Sub 'arn:aws:s3:::${ResourceStorageBucket}'
+              - !Sub 'arn:aws:s3:::${ResourceStorageBucket}/*'
             Principal:
               Service:
                 - lambda.amazonaws.com
