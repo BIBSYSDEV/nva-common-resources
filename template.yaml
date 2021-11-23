@@ -169,6 +169,11 @@ Resources:
 
 #================================= Parameters ============================================================
 
+  PublicationData:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+
   PhaseParameter:
     Type: AWS::SSM::Parameter
     Properties:
@@ -269,7 +274,7 @@ Resources:
       Type: String
       Value: !Ref DataciteEndpointDefaultPort
 
-  Legacy DataCiteMdsEndpointParameter:
+  LegacyDataCiteMdsEndpointParameter:
     Type: AWS::SSM::Parameter
     Properties:
       Description: URI to Datacite MDS endpoint
