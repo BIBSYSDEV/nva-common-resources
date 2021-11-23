@@ -34,9 +34,6 @@ Parameters:
   OrcidBaseUrl:
     Type: String
     Description: URL for communicating with ORCID
-  Phase:
-    Type: String
-    Description: dev, stage,test or empty for production
   ApiGatewayEndpointType:
     Type: String
     Default: EDGE
@@ -208,15 +205,6 @@ Resources:
         Type: String
         Value: !GetAtt ExpandedResourcesBucket.Arn
 
-  PhaseParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      DataType: text
-      Name: phase
-      Type: String
-      Description: It contains the phase (environment). E.g dev, sandbox,test, empty for prod.
-      Value: !Ref Phase
-
   AlmaApiUriParameter:
     Type: AWS::SSM::Parameter
     Properties:
@@ -259,22 +247,6 @@ Resources:
       Name: CustomDomain
       Type: String
       Value: !Ref CustomDomain
-
-  ApiDomainNameParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: Hostname for API Gateway Custom Domain
-      Name: /NVA/ApiDomain
-      Type: String
-      Value: !Join [ '.', [ 'api', !Ref CustomDomain ] ]
-
-  ApplicationDomainParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: Domain-name for the frontend
-      Name: /NVA/ApplicationDomain
-      Type: String
-      Value: !Join [ '.', [ 'frontend', !Ref CustomDomain ] ]
 
   BareHostParameter:
     Type: AWS::SSM::Parameter
