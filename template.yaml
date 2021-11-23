@@ -196,15 +196,14 @@ Resources:
       Name: /NVA/Events/PersistedEntriesBucketName
       Type: String
       Value: !Ref ExpandedResourcesBucket
-    ExpandedResourcesBucketArn:
-      Type: AWS::SSM::Parameter
-      Properties:
-        DataType: text
-        Description: Parameter containing the bucket ARN of EventsBucket so that other services can be aware of the name of the bucket.
-        Name: /NVA/Events/PersistedEntriesBucketArn
-        Type: String
-        Value: !GetAtt ExpandedResourcesBucket.Arn
-
+  ExpandedResourcesBucketArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: Parameter containing the bucket ARN of EventsBucket so that other services can be aware of the name of the bucket.
+      Name: /NVA/Events/PersistedEntriesBucketArn
+      Type: String
+      Value: !GetAtt ExpandedResourcesBucket.Arn
   AlmaApiUriParameter:
     Type: AWS::SSM::Parameter
     Properties:
