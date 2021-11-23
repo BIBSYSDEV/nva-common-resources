@@ -150,6 +150,23 @@ Resources:
         Types:
           - !Ref ApiGatewayEndpointType
 
+  BackendDomainName:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      CertificateArn: !Ref BackendDomainCertificateArn
+      DomainName: !Sub 'api.${CustomDomain}'
+      EndpointConfiguration:
+        Types:
+          - !Ref ApiGatewayEndpointType
+  FrontendDomainName:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      CertificateArn: !Ref BackendDomainCertificateArn
+      DomainName: !Sub 'frontend.${CustomDomain}'
+      EndpointConfiguration:
+        Types:
+          - !Ref ApiGatewayEndpointType
+
 #================================= Parameters ============================================================
 
   PhaseParameter:
