@@ -231,14 +231,6 @@ Resources:
       Type: String
       Value: !Ref FrontendDomainCertificateArn
 
-#  CustomDomainParameter:
-#    Type: AWS::SSM::Parameter
-#    Properties:
-#      Description: Value for Custom Domain.
-#      Name: /NVA/CustomDomain
-#      Type: String
-#      Value: !Ref CustomDomain
-
   LegacyCustomDomainParameter:
     Type: AWS::SSM::Parameter
     Properties:
