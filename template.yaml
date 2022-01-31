@@ -259,14 +259,6 @@ Resources:
       Type: String
       Value: !Ref DataCiteRestEndpoint
 
-  DataciteEndpointDefaultPortParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: Port for communicating with Datacite
-      Name: dataCitePort
-      Type: String
-      Value: !Ref DataciteEndpointDefaultPort
-
   OrcidBaseUrlParameter:
     Type: AWS::SSM::Parameter
     Properties:
