@@ -27,10 +27,6 @@ Parameters:
   DataCiteRestEndpoint:
     Type: String
     Description: URI to Datacite Rest endpoint.
-  DataciteEndpointDefaultPort:
-    Type: String
-    Description: Port for communcation with Datacite
-    Default: 443
   OrcidBaseUrl:
     Type: String
     Description: URL for communicating with ORCID
