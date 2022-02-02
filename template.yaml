@@ -34,6 +34,14 @@ Parameters:
     Type: String
     Default: EDGE
     Description: The ApiGateway Endpoint Type
+  DockerHubUsername:
+    Type: String
+    Default: nvadockeraccoount
+    Description: Username for DockerHub account.
+  DockerHubSecret:
+    Type: String
+    NoEcho: true
+    Description: Secret to DockerHub account.
   Suffix:
     Type: String
     Default: ''
@@ -266,3 +274,16 @@ Resources:
       Name: OrcidBaseUrl
       Type: String
       Value: !Ref OrcidBaseUrl
+
+  #================================= Secrets ============================================================
+
+  DockerHubSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description: Secret containing DockerHub account information used in ontologies service to build code in docker.
+      GenerateSecretString:
+        SecretString: !Sub
+                        - '{"DockerHubUsername": "${DockerHubUsername}", "DockerHubSecret": "${DockerHubSecret}"}'
+                        - DockerHubUsername: !Ref DockerHubUsername
+                        - DockerHubSecret: !Ref DockerHubSecret
+      Name: DockerHubCredentials
