@@ -36,7 +36,6 @@ Parameters:
     Description: The ApiGateway Endpoint Type
   DockerHubUsername:
     Type: String
-    Default: nvadockeraccoount
     Description: Username for DockerHub account.
   DockerHubSecret:
     Type: String
@@ -282,8 +281,5 @@ Resources:
     Properties:
       Description: Secret containing DockerHub account information used in ontologies service to build code in docker.
       GenerateSecretString:
-        SecretString: !Sub
-                        - '{"DockerHubUsername": "${DockerHubUsername}", "DockerHubSecret": "${DockerHubSecret}"}'
-                        - DockerHubUsername: !Ref DockerHubUsername
-                        - DockerHubSecret: !Ref DockerHubSecret
+        SecretString: !Sub '{"DockerHubUsername": "${DockerHubUsername}", "DockerHubSecret": "${DockerHubSecret}"}'
       Name: DockerHubCredentials
