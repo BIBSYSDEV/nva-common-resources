@@ -280,6 +280,5 @@ Resources:
     Type: AWS::SecretsManager::Secret
     Properties:
       Description: Secret containing DockerHub account information used in ontologies service to build code in docker.
-      GenerateSecretString:
-        SecretString: !Sub '{"DockerHubUsername": "${DockerHubUsername}", "DockerHubSecret": "${DockerHubSecret}"}'
+      SecretString: !Sub '{"DockerHubUsername": "${DockerHubUsername}", "DockerHubSecret": "${DockerHubSecret}"}'
       Name: DockerHubCredentials
