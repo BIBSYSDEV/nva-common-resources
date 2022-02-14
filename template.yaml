@@ -34,13 +34,6 @@ Parameters:
     Type: String
     Default: EDGE
     Description: The ApiGateway Endpoint Type
-  DockerHubUsername:
-    Type: String
-    Description: Username for DockerHub account.
-  DockerHubSecret:
-    Type: String
-    NoEcho: true
-    Description: Secret to DockerHub account.
   Suffix:
     Type: String
     Default: ''
@@ -274,11 +267,4 @@ Resources:
       Type: String
       Value: !Ref OrcidBaseUrl
 
-  #================================= Secrets ============================================================
 
-  DockerHubCredentialsSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Description: Secret containing DockerHub account information used in ontologies service to build code in docker.
-      SecretString: !Sub '{"DockerHubUsername": "${DockerHubUsername}", "DockerHubSecret": "${DockerHubSecret}"}'
-      Name: DockerHubCredentials
