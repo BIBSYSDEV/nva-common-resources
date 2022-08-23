@@ -14,9 +14,6 @@ Parameters:
   CustomDomain:
     Type: String
     Description: The domain of the NVA related services. This part of the domain is common to both backend and frontend services. Eg. dev.nva.aws.unit.no or nva.unit.no.
-  BareHostUri:
-    Type: String
-    Description: URI to BARE API.
   DataCiteMdsEndpoint:
     Type: String
     Description: URI to Datacite MDS endpoint.
@@ -222,14 +219,6 @@ Resources:
       Name: CustomDomain
       Type: String
       Value: !Ref CustomDomain
-
-  BareHostParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: Hostname for BARE API
-      Name: BareHost
-      Type: String
-      Value: !Ref BareHostUri
 
   DataCiteMdsEndpointParameter:
     Type: AWS::SSM::Parameter
