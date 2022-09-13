@@ -18,9 +18,6 @@ Parameters:
     Type: String
     Description: URI to Alma API.
     Default: 'https://bibsys.alma.exlibrisgroup.com/view/sru/47BIBSYS_NETWORK'
-  BareHostUri:
-    Type: String
-    Description: URI to BARE API.
   DataCiteMdsEndpoint:
     Type: String
     Description: URI to Datacite MDS endpoint.
@@ -234,14 +231,6 @@ Resources:
       Name: CustomDomain
       Type: String
       Value: !Ref CustomDomain
-
-  BareHostParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: Hostname for BARE API
-      Name: BareHost
-      Type: String
-      Value: !Ref BareHostUri
 
   DataCiteMdsEndpointParameter:
     Type: AWS::SSM::Parameter
