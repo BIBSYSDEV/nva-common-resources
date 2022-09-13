@@ -18,9 +18,6 @@ Parameters:
     Type: String
     Description: URI to Alma API.
     Default: 'https://bibsys.alma.exlibrisgroup.com/view/sru/47BIBSYS_NETWORK'
-  BareHostUri:
-    Type: String
-    Description: URI to BARE API.
   DataCiteMdsEndpoint:
     Type: String
     Description: URI to Datacite MDS endpoint.
