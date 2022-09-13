@@ -232,14 +232,6 @@ Resources:
       Type: String
       Value: !Ref CustomDomain
 
-  BareHostParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Description: Hostname for BARE API
-      Name: BareHost
-      Type: String
-      Value: !Ref BareHostUri
-
   DataCiteMdsEndpointParameter:
     Type: AWS::SSM::Parameter
     Properties:
