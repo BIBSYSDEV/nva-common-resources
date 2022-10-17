@@ -88,7 +88,7 @@ Resources:
   # prevent us from being able to create and destroy the stack. Also, this bucket is read
   # by the search service, so it is a common resource by definition. The deletion of
   # the NVA Resources service stack should not necessarily break the NVA search service
-  ExpandedResourcesBucket:
+  ExpandedResourcesBucketTemp:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !If
@@ -196,7 +196,7 @@ Resources:
       Description: Parameter containing the bucket name of EventsBucket so that other services can be aware of the name of the bucket.
       Name: /NVA/Events/PersistedEntriesBucketName
       Type: String
-      Value: !Ref ExpandedResourcesBucket
+      Value: !Ref ExpandedResourcesBucketTemp
 
   ExpandedResourcesBucketArn:
     Type: AWS::SSM::Parameter
@@ -205,7 +205,7 @@ Resources:
       Description: Parameter containing the bucket ARN of EventsBucket so that other services can be aware of the name of the bucket.
       Name: /NVA/Events/PersistedEntriesBucketArn
       Type: String
-      Value: !GetAtt ExpandedResourcesBucket.Arn
+      Value: !GetAtt ExpandedResourcesBucketTemp.Arn
   AlmaApiUriParameter:
     Type: AWS::SSM::Parameter
     Properties:
