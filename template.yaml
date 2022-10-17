@@ -197,6 +197,7 @@ Resources:
       Name: /NVA/Events/PersistedEntriesBucketName
       Type: String
       Value: !Ref ExpandedResourcesBucket
+
   ExpandedResourcesBucketArn:
     Type: AWS::SSM::Parameter
     Properties:
