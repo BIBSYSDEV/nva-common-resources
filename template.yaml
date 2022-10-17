@@ -142,6 +142,14 @@ Resources:
               Service:
                 - lambda.amazonaws.com
 
+  NvaAthenaQueriesBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Sub 'nva-athena-queries-${AWS::AccountId}'
+      AccessControl: Private
+      VersioningConfiguration:
+        Status: Suspended
 
   BackendDomainName:
     Type: AWS::ApiGateway::DomainName
@@ -189,6 +197,7 @@ Resources:
       Name: /NVA/Events/PersistedEntriesBucketName
       Type: String
       Value: !Ref ExpandedResourcesBucket
+
   ExpandedResourcesBucketArn:
     Type: AWS::SSM::Parameter
     Properties:
@@ -256,4 +265,11 @@ Resources:
       Type: String
       Value: !Ref OrcidBaseUrl
 
-
+  NvaAthenaQueriesBucketName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: Parameter containing the bucket name of NvaAthenaQueriesBucket so that other services can be aware of the name of the bucket.
+      Name: /NVA/Athena/QueriesBucketName
+      Type: String
+      Value: !Ref NvaAthenaQueriesBucket
