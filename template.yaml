@@ -31,6 +31,14 @@ Parameters:
     Type: String
     Default: EDGE
     Description: The ApiGateway Endpoint Type
+  SearchInfrastructureApiUri:
+    Type: String
+    Description: URI to external search infrastructure API (SWS).
+    Default: 'https://api.sws.aws.sikt.no'
+  SearchInfrastructureAuthUri:
+    Type: String
+    Description: URI to auth for external search infrastructure API (SWS).
+    Default: 'https://sws-auth.auth.eu-west-1.amazoncognito.com/oauth2/token'
   Suffix:
     Type: String
     Default: ''
@@ -274,3 +282,21 @@ Resources:
       Name: /NVA/Athena/QueriesBucketName
       Type: String
       Value: !Ref NvaAthenaQueriesBucket
+
+  SearchInfrastructureApiUriParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: Parameter containing the URI to external search infrastructure API (SWS).
+      Name: /NVA/Search/InfrastructureApiUri
+      Type: String
+      Value: !Ref SearchInfrastructureApiUri
+
+  SearchInfrastructureAuthUriParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: Parameter containing the URI to auth for external search infrastructure API (SWS).
+      Name: /NVA/Search/InfrastructureAuthUri
+      Type: String
+      Value: !Ref SearchInfrastructureAuthUri
