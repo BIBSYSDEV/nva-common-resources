@@ -71,8 +71,8 @@ Resources:
     Properties:
       BucketName:  !If
         - WithSuffix
-        - !Sub 'eventbridge-event-bodies-${AWS::StackId}-${Suffix}'
-        - !Sub 'eventbridge-event-bodies-${AWS::StackId}'
+        - !Sub 'eventbridge-event-bodies-${AWS::AccountId}-${Suffix}'
+        - !Sub 'eventbridge-event-bodies-${AWS::AccountId}'
       AccessControl: Private
       LifecycleConfiguration:
         Rules:
