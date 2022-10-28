@@ -71,8 +71,8 @@ Resources:
     Properties:
       BucketName:  !If
         - WithSuffix
-        - !Sub 'eventbridge-event-bodies-${AWS::AccountId}-${Suffix}'
-        - !Sub 'eventbridge-event-bodies-${AWS::AccountId}'
+        - !Sub 'eventbridge-event-bodies-${AWS::StackId}-${Suffix}'
+        - !Sub 'eventbridge-event-bodies-${AWS::StackId}'
       AccessControl: Private
       LifecycleConfiguration:
         Rules:
@@ -103,6 +103,7 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
     Properties:
+
       BucketName: !If
         - WithSuffix
         - !Sub 'nva-resource-storage-${AWS::AccountId}-${Suffix}'
