@@ -307,3 +307,19 @@ Resources:
       Name: /NVA/Athena/QueriesBucketName
       Type: String
       Value: !Ref NvaAthenaQueriesBucket
+
+  SlackSnsArnParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Common Amazon Simple Notification Service topic ARN for posting service notifications from all the different NVA stacks. Referenced with {{resolve:ssm:/NVA/Monitoring/SlackSnsArn}} in other templates
+      Name: /NVA/Monitoring/SlackSnsArn
+      Type: String
+      Value: !Ref SlackSNSTopic
+
+  SlackSnsNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Common Amazon Simple Notification Service topic name for posting service notifications from all the different NVA stacks. Referenced with {{resolve:ssm:/NVA/Monitoring/SlackSnsName}} in other templates
+      Name: /NVA/Monitoring/SlackSnsName
+      Type: String
+      Value: !GetAtt SlackSNSTopic.TopicName
