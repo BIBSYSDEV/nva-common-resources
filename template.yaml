@@ -83,6 +83,38 @@ Resources:
       VersioningConfiguration:
         Status: Suspended
 
+  ChatbotRole: 
+    Type: "AWS::IAM::Role"
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - Effect: "Allow"
+            Principal: 
+              Service: 
+                - "chatbot.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSNSReadOnlyAccess
+        - arn:aws:iam::aws:policy/AWSSupportAccess
+        - arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess
+
+  SlackSNSTopic:
+    Type: AWS::SNS::Topic
+
+  NvaSlackChannel:
+    Type: AWS::Chatbot::SlackChannelConfiguration
+    Properties: 
+      ConfigurationName: nva-monitoring
+      IamRoleArn: !GetAtt ChatbotRole.Arn
+      LoggingLevel: INFO
+      SlackChannelId: C05G0G51P5G
+      SlackWorkspaceId: T4NMA0DMM
+      SnsTopicArns: 
+        - !Ref SlackSNSTopic
+
 
 #  #This bucket could belong to the NVA Resources service but being there would
 #  # prevent us from being able to create and destroy the stack. Also, this bucket is read
