@@ -31,6 +31,12 @@ Parameters:
     Type: String
     Default: EDGE
     Description: The ApiGateway Endpoint Type
+  SlackChannelId:
+    Type: String
+    Description: ID of slack channel. Example C062X85HNHZ (#nva-monitoring-dev)
+  SlackWorkspaceId:
+    Type: String
+    Description: ID of slack workspace. Example T4NMA0DMM (sikt)
   Suffix:
     Type: String
     Default: ''
@@ -110,8 +116,8 @@ Resources:
       ConfigurationName: nva-monitoring
       IamRoleArn: !GetAtt ChatbotRole.Arn
       LoggingLevel: INFO
-      SlackChannelId: C05G0G51P5G
-      SlackWorkspaceId: T4NMA0DMM
+      SlackChannelId: !Ref SlackChannelId
+      SlackWorkspaceId: !Ref SlackWorkspaceId
       SnsTopicArns: 
         - !Ref SlackSNSTopic
 
