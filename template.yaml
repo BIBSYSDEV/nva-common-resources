@@ -32,13 +32,11 @@ Parameters:
     Default: EDGE
     Description: The ApiGateway Endpoint Type
   SlackChannelId:
-    Type: AWS::SSM::Parameter::Value<String>
-    Description: ID of slack channel. Example C062X85HNHZ (#nva-monitoring-dev)
-    Default: /NVA/Monitoring/SlackChannelId
+    Type: String
+    Description: ID of slack channel. Used for monitoring/alerts. Example CXXXXXXXXXX
   SlackWorkspaceId:
-    Type: AWS::SSM::Parameter::Value<String>
-    Description: ID of slack workspace. Example T4NMA0DMM (sikt)
-    Default: /NVA/Monitoring/SlackWorkspaceId
+    Type: String
+    Description: ID of slack workspace. Used for monitoring/alerts. Example TXXXXXXXX
   Suffix:
     Type: String
     Default: ''
