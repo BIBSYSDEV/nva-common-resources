@@ -133,6 +133,11 @@ Resources:
         - WithSuffix
         - !Sub 'persisted-resources-${AWS::AccountId}-${Suffix}'
         - !Sub 'persisted-resources-${AWS::AccountId}'
+      "NotificationConfiguration": {
+        "EventBridgeConfiguration": {
+          "EventBridgeEnabled": true
+        }
+      }
       AccessControl: Private
       VersioningConfiguration:
         Status: Suspended
