@@ -340,10 +340,18 @@ Resources:
       Type: String
       Value: !GetAtt SlackSNSTopic.TopicName
 
-  CristinImportNviQueueParameter:
+  CristinImportNviQueueParameterArn:
     Type: AWS::SSM::Parameter
     Properties:
       Description: Amazon SQS Queue for cristin-import nvi entries
-      Name: /NVA/Queues/CristinImportNviQueue
+      Name: /NVA/Queues/CristinImportNviQueueArn
       Type: String
       Value: !GetAtt CristinImportNviQueue.Arn
+
+  CristinImportNviQueueParameterUrl:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Amazon SQS Queue for cristin-import nvi entries
+      Name: /NVA/Queues/CristinImportNviQueueUrl
+      Type: String
+      Value: !GetAtt CristinImportNviQueue.QueueUrl
