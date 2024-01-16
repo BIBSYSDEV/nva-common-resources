@@ -204,6 +204,9 @@ Resources:
         Types:
           - !Ref ApiGatewayEndpointType
 
+  CristinImportNviQueue:
+    Type: AWS::SQS::Queue
+
 #================================= Parameters ============================================================
 
   EventsBucketName:
@@ -336,3 +339,11 @@ Resources:
       Name: /NVA/Monitoring/SlackSnsName
       Type: String
       Value: !GetAtt SlackSNSTopic.TopicName
+
+  CristinImportNviQueueParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Amazon SQS Queue for cristin-import nvi entries
+      Name: /NVA/Queues/CristinImportNviQueue
+      Type: String
+      Value: !GetAtt CristinImportNviQueue.Arn
