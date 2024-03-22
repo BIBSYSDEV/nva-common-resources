@@ -83,8 +83,7 @@ Resources:
       LifecycleConfiguration:
         Rules:
           - Id: "ExpiryPolicy"
-            ExpirationInDays: 1
-            NoncurrentVersionExpirationInDays: 1
+            ExpirationInDays: 14
             Status: Enabled
       VersioningConfiguration:
         Status: Suspended
