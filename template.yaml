@@ -84,7 +84,6 @@ Resources:
         Rules:
           - Id: "ExpiryPolicy"
             ExpirationInDays: 14
-            NoncurrentVersionExpirationInDays: 14
             Status: Enabled
       VersioningConfiguration:
         Status: Suspended
