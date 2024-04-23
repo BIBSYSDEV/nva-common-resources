@@ -141,6 +141,21 @@ Resources:
       VersioningConfiguration:
         Status: Suspended
 
+  # Bucket for storing API responses that are too large to pass through Lambda
+  LargeApiResponsesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !If
+        - WithSuffix
+        - !Sub 'large-api-responses-${AWS::AccountId}-${Suffix}'
+        - !Sub 'large-api-responses-${AWS::AccountId}'
+      AccessControl: Private
+      LifecycleConfiguration:
+        Rules:
+          - Status: Enabled
+            ExpirationInDays: 1
+    DeletionPolicy: Retain
+
   ResourceStorageBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
@@ -252,6 +267,24 @@ Resources:
       Name: /NVA/Events/PersistedEntriesBucketArn
       Type: String
       Value: !GetAtt ExpandedResourcesBucket.Arn
+
+  LargeApiResponsesBucketName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: Parameter containing the bucket name of LargeApiResponses so that other services can be aware of the name of the bucket.
+      Name: /NVA/LargeApiResponsesBucketName
+      Type: String
+      Value: !Ref LargeApiResponsesBucket
+
+  LargeApiResponsesBucketArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: Parameter containing the bucket ARN of LargeApiResponses so that other services can be aware of the name of the bucket.
+      Name: /NVA/LargeApiResponsesBucketArn
+      Type: String
+      Value: !GetAtt LargeApiResponsesBucket.Arn
 
   AlmaApiUriParameter:
     Type: AWS::SSM::Parameter
