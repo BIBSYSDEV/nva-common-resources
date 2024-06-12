@@ -221,6 +221,86 @@ Resources:
   CristinImportNviQueue:
     Type: AWS::SQS::Queue
 
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags: 
+        Name: !Sub nva-${EnvironmentName}-static-ip-vpc
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags: 
+        Name: !Sub nva-${EnvironmentName}-static-ip-igw
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnetCIDR
+      MapPublicIpOnLaunch: true
+      Tags: 
+        Name: !Sub nva-${EnvironmentName}-static-ip-public-subnet
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnetCIDR
+      MapPublicIpOnLaunch: false
+      Tags: 
+        Name: !Sub nva-${EnvironmentName}-static-ip-private-subnet
+  NatGatewayEIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGatewayEIP.AllocationId
+      SubnetId: !Ref PublicSubnet
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags: 
+        Name: !Sub nva-${EnvironmentName}-static-ip-public-routes
+  DefaultPublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags: 
+        Name: !Sub nva-${EnvironmentName}-static-ip-private-routes
+  DefaultPrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway
+  PrivateSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet
+
 #================================= Parameters ============================================================
 
   EventsBucketName:
@@ -387,3 +467,27 @@ Resources:
       Name: /NVA/Queues/CristinImportNviQueueUrl
       Type: String
       Value: !GetAtt CristinImportNviQueue.QueueUrl
+
+  VPCParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: VPC ID for workloads where we need a static IP
+      Name: "/NVA/EIP/VPC/id"
+      Type: String
+      Value: !Ref VPC
+
+  PrivateSubnetParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Private Subnet ID for workloads where we need a static IP
+      Name: "/NVA/EIP/PrivateSubnet/id"
+      Type: String
+      Value: !Ref PrivateSubnet
+
+  NatGatewayEIPParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Elastic IP for NAT Gateway for workloads where we need a static IP
+      Name: "/NVA/EIP/PublicIp"
+      Type: String
+      Value: !GetAtt NatGatewayEIP.PublicIp
