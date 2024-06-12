@@ -44,6 +44,18 @@ Parameters:
   EnvironmentName:
     Type: String
     Description: Environment name. Must be unique accross all NVA environments as it will be part of the cognito uri and potentially other resources like S3.
+  VpcCIDR:
+    Description: IP range (CIDR notation) for this VPC
+    Type: String
+    Default: 10.192.0.0/16
+  PublicSubnetCIDR:
+    Description: IP range (CIDR notation) for the public subnet
+    Type: String
+    Default: 10.192.10.0/24
+  PrivateSubnetCIDR:
+    Description: IP range (CIDR notation) for the private subnet
+    Type: String
+    Default: 10.192.20.0/24
 
 Conditions:
   WithSuffix: !Not [ !Equals [ !Ref Suffix, '' ] ]
