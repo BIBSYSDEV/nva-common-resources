@@ -41,6 +41,9 @@ Parameters:
     Type: String
     Default: ''
     Description: Suffix used for naming resources for feature branches to avoid conflicts.
+  EnvironmentName:
+    Type: String
+    Description: Environment name. Must be unique accross all NVA environments as it will be part of the cognito uri and potentially other resources like S3.
 
 Conditions:
   WithSuffix: !Not [ !Equals [ !Ref Suffix, '' ] ]
