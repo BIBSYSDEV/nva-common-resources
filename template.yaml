@@ -243,12 +243,14 @@ Resources:
       EnableDnsSupport: true
       EnableDnsHostnames: true
       Tags: 
-        Name: !Sub nva-${EnvironmentName}-static-ip-vpc
+        - Key: Name
+          Value: !Sub nva-${EnvironmentName}-static-ip-vpc
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags: 
-        Name: !Sub nva-${EnvironmentName}-static-ip-igw
+        - Key: Name
+          Value: !Sub nva-${EnvironmentName}-static-ip-igw
   InternetGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
@@ -261,7 +263,8 @@ Resources:
       CidrBlock: !Ref PublicSubnetCIDR
       MapPublicIpOnLaunch: true
       Tags: 
-        Name: !Sub nva-${EnvironmentName}-static-ip-public-subnet
+        - Key: Name
+          Value: !Sub nva-${EnvironmentName}-static-ip-public-subnet
   PrivateSubnet:
     Type: AWS::EC2::Subnet
     Properties:
@@ -269,7 +272,9 @@ Resources:
       CidrBlock: !Ref PrivateSubnetCIDR
       MapPublicIpOnLaunch: false
       Tags: 
-        Name: !Sub nva-${EnvironmentName}-static-ip-private-subnet
+        - Key: Name
+          Value: !Sub nva-${EnvironmentName}-static-ip-private-subnet
+
   NatGatewayEIP:
     Type: AWS::EC2::EIP
     DependsOn: InternetGatewayAttachment
@@ -285,7 +290,8 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       Tags: 
-        Name: !Sub nva-${EnvironmentName}-static-ip-public-routes
+        - Key: Name
+          Value: !Sub nva-${EnvironmentName}-static-ip-public-routes
   DefaultPublicRoute:
     Type: AWS::EC2::Route
     DependsOn: InternetGatewayAttachment
@@ -303,7 +309,8 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       Tags: 
-        Name: !Sub nva-${EnvironmentName}-static-ip-private-routes
+        - Key: Name
+          Value: !Sub nva-${EnvironmentName}-static-ip-private-routes
   DefaultPrivateRoute:
     Type: AWS::EC2::Route
     Properties:
