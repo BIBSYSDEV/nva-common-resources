@@ -229,6 +229,7 @@ Resources:
     Properties:
       CertificateArn: !Ref BackendDomainCertificateArn
       DomainName: !Sub 'api.${CustomDomain}'
+      SecurityPolicy: TLS_1_2
       EndpointConfiguration:
         Types:
           - !Ref ApiGatewayEndpointType
@@ -322,6 +323,12 @@ Resources:
     Properties:
       RouteTableId: !Ref PrivateRouteTable
       SubnetId: !Ref PrivateSubnet
+  StaticIpSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub nva-${EnvironmentName}-static-ip-sg
+      GroupDescription: "Security group with no ingress rule for static IP"
+      VpcId: !Ref VPC
 
 #================================= Parameters ============================================================
 
@@ -513,3 +520,11 @@ Resources:
       Name: "/NVA/EIP/PublicIp"
       Type: String
       Value: !GetAtt NatGatewayEIP.PublicIp
+
+  StaticIpSecurityGroupParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: Security Group ID for workloads where we need a static IP
+      Name: "/NVA/EIP/SecurityGroup/GroupId"
+      Type: String
+      Value: !GetAtt StaticIpSecurityGroup.GroupId
