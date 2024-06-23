@@ -229,7 +229,6 @@ Resources:
     Properties:
       CertificateArn: !Ref BackendDomainCertificateArn
       DomainName: !Sub 'api.${CustomDomain}'
-      SecurityPolicy: TLS_1_2
       EndpointConfiguration:
         Types:
           - !Ref ApiGatewayEndpointType
