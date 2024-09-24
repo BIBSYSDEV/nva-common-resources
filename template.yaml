@@ -90,7 +90,7 @@ Resources:
   EventsBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName:  !If
+      BucketName: !If
         - WithSuffix
         - !Sub 'eventbridge-event-bodies-${AWS::AccountId}-${Suffix}'
         - !Sub 'eventbridge-event-bodies-${AWS::AccountId}'
@@ -103,17 +103,17 @@ Resources:
       VersioningConfiguration:
         Status: Suspended
 
-  ChatbotRole: 
+  ChatbotRole:
     Type: "AWS::IAM::Role"
-    Properties: 
-      AssumeRolePolicyDocument: 
+    Properties:
+      AssumeRolePolicyDocument:
         Version: "2012-10-17"
-        Statement: 
+        Statement:
           - Effect: "Allow"
-            Principal: 
-              Service: 
+            Principal:
+              Service:
                 - "chatbot.amazonaws.com"
-            Action: 
+            Action:
               - "sts:AssumeRole"
       Path: "/"
       ManagedPolicyArns:
@@ -126,20 +126,20 @@ Resources:
 
   NvaSlackChannel:
     Type: AWS::Chatbot::SlackChannelConfiguration
-    Properties: 
+    Properties:
       ConfigurationName: nva-monitoring
       IamRoleArn: !GetAtt ChatbotRole.Arn
       LoggingLevel: INFO
       SlackChannelId: !Ref SlackChannelId
       SlackWorkspaceId: !Ref SlackWorkspaceId
-      SnsTopicArns: 
+      SnsTopicArns:
         - !Ref SlackSNSTopic
 
 
-#  #This bucket could belong to the NVA Resources service but being there would
-#  # prevent us from being able to create and destroy the stack. Also, this bucket is read
-#  # by the search service, so it is a common resource by definition. The deletion of
-#  # the NVA Resources service stack should not necessarily break the NVA search service
+  #  #This bucket could belong to the NVA Resources service but being there would
+  #  # prevent us from being able to create and destroy the stack. Also, this bucket is read
+  #  # by the search service, so it is a common resource by definition. The deletion of
+  #  # the NVA Resources service stack should not necessarily break the NVA search service
   ExpandedResourcesBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -182,10 +182,10 @@ Resources:
         - !Sub 'nva-resource-storage-${AWS::AccountId}'
       CorsConfiguration:
         CorsRules:
-          - AllowedHeaders: ['*']
-            AllowedMethods: [GET, PUT, POST, HEAD]
-            AllowedOrigins: ['*']
-            ExposedHeaders: [ETag]
+          - AllowedHeaders: [ '*' ]
+            AllowedMethods: [ GET, PUT, POST, HEAD ]
+            AllowedOrigins: [ '*' ]
+            ExposedHeaders: [ ETag ]
       LifecycleConfiguration:
         Rules:
           - Id: RemoveFailedUploads
@@ -242,13 +242,13 @@ Resources:
       CidrBlock: !Ref VpcCIDR
       EnableDnsSupport: true
       EnableDnsHostnames: true
-      Tags: 
+      Tags:
         - Key: Name
           Value: !Sub nva-${EnvironmentName}-static-ip-vpc
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
-      Tags: 
+      Tags:
         - Key: Name
           Value: !Sub nva-${EnvironmentName}-static-ip-igw
   InternetGatewayAttachment:
@@ -262,7 +262,7 @@ Resources:
       VpcId: !Ref VPC
       CidrBlock: !Ref PublicSubnetCIDR
       MapPublicIpOnLaunch: true
-      Tags: 
+      Tags:
         - Key: Name
           Value: !Sub nva-${EnvironmentName}-static-ip-public-subnet
   PrivateSubnet:
@@ -271,7 +271,7 @@ Resources:
       VpcId: !Ref VPC
       CidrBlock: !Ref PrivateSubnetCIDR
       MapPublicIpOnLaunch: false
-      Tags: 
+      Tags:
         - Key: Name
           Value: !Sub nva-${EnvironmentName}-static-ip-private-subnet
 
@@ -289,7 +289,7 @@ Resources:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
-      Tags: 
+      Tags:
         - Key: Name
           Value: !Sub nva-${EnvironmentName}-static-ip-public-routes
   DefaultPublicRoute:
@@ -308,7 +308,7 @@ Resources:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
-      Tags: 
+      Tags:
         - Key: Name
           Value: !Sub nva-${EnvironmentName}-static-ip-private-routes
   DefaultPrivateRoute:
@@ -329,7 +329,7 @@ Resources:
       GroupDescription: "Security group with no ingress rule for static IP"
       VpcId: !Ref VPC
 
-#================================= Parameters ============================================================
+  #================================= Parameters ============================================================
 
   EventsBucketName:
     Type: AWS::SSM::Parameter
@@ -527,3 +527,101 @@ Resources:
       Name: "/NVA/EIP/SecurityGroup/GroupId"
       Type: String
       Value: !GetAtt StaticIpSecurityGroup.GroupId
+
+  # AWS Backup Plan
+  BackupPlan:
+    Type: AWS::Backup::BackupPlan
+    Properties:
+      BackupPlan:
+        BackupPlanName: DailyBackupPlan
+        BackupPlanRule:
+          - RuleName: DailyBackupRule
+            TargetBackupVault: !Ref BackupVault
+            ScheduleExpression: 'cron(0 0 * * ? *)' # 0 AM UTC daily
+            StartWindowMinutes: 60
+            CompletionWindowMinutes: 120
+            Lifecycle:
+              DeleteAfterDays: 7 # Retain backups for 7 days
+            RecoveryPointTags:
+              BackupType: Daily
+
+  # AWS Backup Vault
+  BackupVault:
+    Type: AWS::Backup::BackupVault
+    Properties:
+      BackupVaultName: DailyBackupVault
+      EncryptionKeyArn: !Ref KMSKey
+      AccessPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: '*'
+            Action:
+              - backup:StartBackupJob
+              - backup:DeleteRecoveryPoint
+            Resource: '*'
+
+  # Backup Selection
+  BackupSelection:
+    Type: AWS::Backup::BackupSelection
+    Properties:
+      BackupPlanId: !Ref BackupPlan
+      BackupSelection:
+        SelectionName: BackupSelection
+        IamRoleArn: !GetAtt BackupRole.Arn
+        Resources:
+          - arn:aws:s3:::*
+          - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/*
+        ListOfTags:
+          - ConditionKey: IncludedInDailyBackup
+            ConditionValue: 'true'
+            ConditionType: StringEquals
+
+  # IAM Role for Backup Service
+  BackupRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: BackupServiceRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: backup.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: BackupPermissions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:ListTables
+                  - dynamodb:ListTagsOfResource
+                  - s3:ListAllMyBuckets
+                  - s3:GetBucketTagging
+                  - backup:StartBackupJob
+                  - backup:ListRecoveryPointsByBackupVault
+                  - backup:DeleteBackupPlan
+                  - backup:DeleteRecoveryPoint
+                  - backup:CreateBackupPlan
+                  - backup:TagResource
+                  - backup:ListTags
+                  - backup:DescribeBackupJob
+                Resource: "*"
+
+  # KMS Key for encryption of backup vault
+  KMSKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: "KMS key for encrypting AWS Backup vault"
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "Enable IAM User Permissions"
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action: "kms:*"
+            Resource: "*"
