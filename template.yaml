@@ -609,6 +609,7 @@ Resources:
                   - backup:TagResource
                   - backup:ListTags
                   - backup:DescribeBackupJob
+                  - tag:GetResources
                 Resource: "*"
 
   # KMS Key for encryption of backup vault
