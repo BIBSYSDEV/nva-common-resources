@@ -529,14 +529,14 @@ Resources:
       Value: !GetAtt StaticIpSecurityGroup.GroupId
 
   # AWS Backup Plan
-  BackupPlan:
+  NvaBackupPlan:
     Type: AWS::Backup::BackupPlan
     Properties:
       BackupPlan:
-        BackupPlanName: DailyBackupPlan
+        BackupPlanName: NvaBackupPlan
         BackupPlanRule:
           - RuleName: DailyBackupRule
-            TargetBackupVault: !Ref BackupVault
+            TargetBackupVault: !Ref NvaBackupVault
             ScheduleExpression: 'cron(0 0 * * ? *)' # 0 AM UTC daily
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
@@ -546,10 +546,10 @@ Resources:
               BackupType: Daily
 
   # AWS Backup Vault
-  BackupVault:
+  NvaBackupVault:
     Type: AWS::Backup::BackupVault
     Properties:
-      BackupVaultName: DailyBackupVault
+      BackupVaultName: NvaBackupVault
       # EncryptionKeyArn: !Ref KMSKey
 #      AccessPolicy:
 #        Version: '2012-10-17'
@@ -563,18 +563,18 @@ Resources:
 #            Resource: '*'
 
   # Backup Selection
-  BackupSelection:
+  NvaBackupSelection:
     Type: AWS::Backup::BackupSelection
     Properties:
-      BackupPlanId: !Ref BackupPlan
+      BackupPlanId: !Ref NvaBackupPlan
       BackupSelection:
-        SelectionName: BackupSelection
+        SelectionName: NvaBackupSelection
         IamRoleArn: !GetAtt BackupRole.Arn
         Resources:
           - arn:aws:s3:::*
           - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/*
         ListOfTags:
-          - ConditionKey: IncludedInDailyBackup
+          - ConditionKey: IncludedInBackup
             ConditionValue: 'true'
             ConditionType: StringEquals
 
