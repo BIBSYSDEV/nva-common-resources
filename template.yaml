@@ -551,16 +551,16 @@ Resources:
     Properties:
       BackupVaultName: DailyBackupVault
       # EncryptionKeyArn: !Ref KMSKey
-      AccessPolicy:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              AWS: '*'
-            Action:
-              - backup:StartBackupJob
-              - backup:DeleteRecoveryPoint
-            Resource: '*'
+#      AccessPolicy:
+#        Version: '2012-10-17'
+#        Statement:
+#          - Effect: Allow
+#            Principal:
+#              AWS: !Sub arn:aws:iam::${AWS::AccountId}:*'
+#            Action:
+#              - backup:StartBackupJob
+#              - backup:DeleteRecoveryPoint
+#            Resource: '*'
 
   # Backup Selection
   BackupSelection:
