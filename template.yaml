@@ -544,13 +544,14 @@ Resources:
               DeleteAfterDays: 7 # Retain backups for 7 days
             RecoveryPointTags:
               BackupType: Daily
+        AdvancedBackupSettings:
 
   # AWS Backup Vault
   BackupVault:
     Type: AWS::Backup::BackupVault
     Properties:
       BackupVaultName: DailyBackupVault
-      EncryptionKeyArn: !Ref KMSKey
+      # EncryptionKeyArn: !Ref KMSKey
       AccessPolicy:
         Version: '2012-10-17'
         Statement:
@@ -612,16 +613,16 @@ Resources:
                 Resource: "*"
 
   # KMS Key for encryption of backup vault
-  KMSKey:
-    Type: AWS::KMS::Key
-    Properties:
-      Description: "KMS key for encrypting AWS Backup vault"
-      KeyPolicy:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: "Enable IAM User Permissions"
-            Effect: Allow
-            Principal:
-              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
-            Action: "kms:*"
-            Resource: "*"
+#  KMSKey:
+#    Type: AWS::KMS::Key
+#    Properties:
+#      Description: "KMS key for encrypting AWS Backup vault"
+#      KeyPolicy:
+#        Version: "2012-10-17"
+#        Statement:
+#          - Sid: "Enable IAM User Permissions"
+#            Effect: Allow
+#            Principal:
+#              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+#            Action: "kms:*"
+#            Resource: "*"
