@@ -544,7 +544,6 @@ Resources:
               DeleteAfterDays: 7 # Retain backups for 7 days
             RecoveryPointTags:
               BackupType: Daily
-        AdvancedBackupSettings:
 
   # AWS Backup Vault
   BackupVault:
