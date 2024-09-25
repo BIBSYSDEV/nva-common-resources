@@ -544,6 +544,33 @@ Resources:
               DeleteAfterDays: 7 # Retain backups for 7 days
             RecoveryPointTags:
               BackupType: Daily
+          - RuleName: HourlyBackupRule
+            TargetBackupVault: !Ref NvaBackupVault
+            ScheduleExpression: 'cron(0 * * * ? *)' # every hour
+            StartWindowMinutes: 60
+            CompletionWindowMinutes: 120
+            Lifecycle:
+              DeleteAfterDays: 7 # Retain backups for 7 days
+            RecoveryPointTags:
+              BackupType: Hourly
+          - RuleName: WeeklyBackupRule
+            TargetBackupVault: !Ref NvaBackupVault
+            ScheduleExpression: 'cron(0 0 0/7/14/28 * ? *)' # every week
+            StartWindowMinutes: 60
+            CompletionWindowMinutes: 120
+            Lifecycle:
+              DeleteAfterDays: 28 # Retain backups for 28 days
+            RecoveryPointTags:
+              BackupType: Weekly
+          - RuleName: QuarterlyBackupRule
+            TargetBackupVault: !Ref NvaBackupVault
+            ScheduleExpression: 'cron(0 0 0 0/3/6/9 ? *)' # every quarter
+            StartWindowMinutes: 60
+            CompletionWindowMinutes: 120
+            Lifecycle:
+              DeleteAfterDays: 365 # Retain backups for 28 days
+            RecoveryPointTags:
+              BackupType: Quarterly
 
   # AWS Backup Vault
   NvaBackupVault:
