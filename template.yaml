@@ -555,7 +555,7 @@ Resources:
               BackupType: Hourly
           - RuleName: WeeklyBackupRule
             TargetBackupVault: !Ref NvaBackupVault
-            ScheduleExpression: 'cron(0 0 ? * 0 *)' # sunday every week at 0:00 UTC
+            ScheduleExpression: 'cron(0 0 ? * 1 *)' # sunday every week at 0:00 UTC
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
             Lifecycle:
