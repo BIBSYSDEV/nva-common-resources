@@ -598,7 +598,7 @@ Resources:
         SelectionName: NvaBackupSelection
         IamRoleArn: !GetAtt BackupRole.Arn
         Resources:
-          - arn:aws:s3:::*
+          # - arn:aws:s3:::*
           - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/*
         ListOfTags:
           - ConditionKey: IncludedInBackup
