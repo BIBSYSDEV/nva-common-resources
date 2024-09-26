@@ -535,15 +535,15 @@ Resources:
       BackupPlan:
         BackupPlanName: NvaBackupPlan
         BackupPlanRule:
-          - RuleName: DevBackupRule
+          - RuleName: HourlyBackupRule
             TargetBackupVault: !Ref NvaBackupVault
-            ScheduleExpression: 'cron(*/10 0 * * ? *)' # 0 AM UTC daily
+            ScheduleExpression: 'cron(20 * * * ? *)' # every hour
             StartWindowMinutes: 10
             CompletionWindowMinutes: 120
             Lifecycle:
               DeleteAfterDays: 1 # Retain backups for 7 days
             RecoveryPointTags:
-              BackupType: DevBackup
+              BackupType: Hourly
 #          - RuleName: DailyBackupRule
 #            TargetBackupVault: !Ref NvaBackupVault
 #            ScheduleExpression: 'cron(0 0 * * ? *)' # 0 AM UTC daily
@@ -553,15 +553,6 @@ Resources:
 #              DeleteAfterDays: 7 # Retain backups for 7 days
 #            RecoveryPointTags:
 #              BackupType: Daily
-#          - RuleName: HourlyBackupRule
-#            TargetBackupVault: !Ref NvaBackupVault
-#            ScheduleExpression: 'cron(0 * * * ? *)' # every hour
-#            StartWindowMinutes: 60
-#            CompletionWindowMinutes: 120
-#            Lifecycle:
-#              DeleteAfterDays: 7 # Retain backups for 7 days
-#            RecoveryPointTags:
-#              BackupType: Hourly
 #          - RuleName: WeeklyBackupRule
 #            TargetBackupVault: !Ref NvaBackupVault
 #            ScheduleExpression: 'cron(0 0 ? * 1 *)' # sunday every week at 0:00 UTC
