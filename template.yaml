@@ -590,6 +590,8 @@ Resources:
           - ConditionKey: IncludedInBackup
             ConditionValue: 'true'
             ConditionType: STRINGEQUALS
+        Resources:
+        - AWS::DynamoDB::Table
 
   # IAM Role for Backup Service
   BackupRole:
