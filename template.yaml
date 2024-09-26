@@ -529,12 +529,21 @@ Resources:
       Value: !GetAtt StaticIpSecurityGroup.GroupId
 
   # AWS Backup Plan
-#  NvaBackupPlan:
-#    Type: AWS::Backup::BackupPlan
-#    Properties:
-#      BackupPlan:
-#        BackupPlanName: NvaBackupPlan
-#        BackupPlanRule:
+  NvaBackupPlan:
+    Type: AWS::Backup::BackupPlan
+    Properties:
+      BackupPlan:
+        BackupPlanName: NvaBackupPlan
+        BackupPlanRule:
+          - RuleName: DevBackupRule
+            TargetBackupVault: !Ref NvaBackupVault
+            ScheduleExpression: 'cron(*/10 0 * * ? *)' # 0 AM UTC daily
+            StartWindowMinutes: 10
+            CompletionWindowMinutes: 120
+            Lifecycle:
+              DeleteAfterDays: 1 # Retain backups for 7 days
+            RecoveryPointTags:
+              BackupType: DevBackup
 #          - RuleName: DailyBackupRule
 #            TargetBackupVault: !Ref NvaBackupVault
 #            ScheduleExpression: 'cron(0 0 * * ? *)' # 0 AM UTC daily
@@ -571,37 +580,37 @@ Resources:
 #              DeleteAfterDays: 365 # Retain backups for 28 days
 #            RecoveryPointTags:
 #              BackupType: Quarterly
-#
-#  # AWS Backup Vault
-#  NvaBackupVault:
-#    Type: AWS::Backup::BackupVault
-#    Properties:
-#      BackupVaultName: NvaBackupVault
-#
-#  # Backup Selection
-#  NvaBackupSelection:
-#    Type: AWS::Backup::BackupSelection
-#    Properties:
-#      BackupPlanId: !Ref NvaBackupPlan
-#      BackupSelection:
-#        SelectionName: NvaBackupSelection
-#        IamRoleArn: !GetAtt BackupRole.Arn
-#        ListOfTags:
-#          - ConditionKey: IncludedInBackup
-#            ConditionValue: 'true'
-#            ConditionType: STRINGEQUALS
-#
-#  # IAM Role for Backup Service
-#  BackupRole:
-#    Type: AWS::IAM::Role
-#    Properties:
-#      RoleName: BackupServiceRole
-#      AssumeRolePolicyDocument:
-#        Version: '2012-10-17'
-#        Statement:
-#          - Effect: Allow
-#            Principal:
-#              Service: backup.amazonaws.com
-#            Action: sts:AssumeRole
-#      ManagedPolicyArns:
-#        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
+
+  # AWS Backup Vault
+  NvaBackupVault:
+    Type: AWS::Backup::BackupVault
+    Properties:
+      BackupVaultName: NvaBackupVault
+
+  # Backup Selection
+  NvaBackupSelection:
+    Type: AWS::Backup::BackupSelection
+    Properties:
+      BackupPlanId: !Ref NvaBackupPlan
+      BackupSelection:
+        SelectionName: NvaBackupSelection
+        IamRoleArn: !GetAtt BackupRole.Arn
+        ListOfTags:
+          - ConditionKey: IncludedInBackup
+            ConditionValue: 'true'
+            ConditionType: STRINGEQUALS
+
+  # IAM Role for Backup Service
+  BackupRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: BackupServiceRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: backup.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
