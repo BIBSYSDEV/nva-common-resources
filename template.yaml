@@ -603,7 +603,7 @@ Resources:
         ListOfTags:
           - ConditionKey: IncludedInBackup
             ConditionValue: 'true'
-            ConditionType: StringEquals
+            ConditionType: STRINGEQUALS
 
   # IAM Role for Backup Service
   BackupRole:
