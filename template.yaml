@@ -577,17 +577,6 @@ Resources:
     Type: AWS::Backup::BackupVault
     Properties:
       BackupVaultName: NvaBackupVault
-      # EncryptionKeyArn: !Ref KMSKey
-#      AccessPolicy:
-#        Version: '2012-10-17'
-#        Statement:
-#          - Effect: Allow
-#            Principal:
-#              AWS: !Sub arn:aws:iam::${AWS::AccountId}:*'
-#            Action:
-#              - backup:StartBackupJob
-#              - backup:DeleteRecoveryPoint
-#            Resource: '*'
 
   # Backup Selection
   NvaBackupSelection:
@@ -597,9 +586,6 @@ Resources:
       BackupSelection:
         SelectionName: NvaBackupSelection
         IamRoleArn: !GetAtt BackupRole.Arn
-        Resources:
-          # - arn:aws:s3:::*
-          - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/*
         ListOfTags:
           - ConditionKey: IncludedInBackup
             ConditionValue: 'true'
@@ -619,43 +605,3 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
-#      Policies:
-#        - PolicyName: DynamodbBackupPermissions
-#          PolicyDocument:
-#            Version: '2012-10-17'
-#            Statement:
-#              - Effect: Allow
-#                Action:
-#                  - dynamodb:ListTables
-#                  - dynamodb:ListTagsOfResource
-#                  - dynamodb:StartAwsBackupJob
-#                  - dynamodb:DescribeTable
-#                  - s3:ListBucket
-#                  - s3:GetObject
-#                  - s3:ListAllMyBuckets
-#                  - s3:GetBucketTagging
-#                  - backup:StartBackupJob
-#                  - backup:ListRecoveryPointsByBackupVault
-#                  - backup:DeleteBackupPlan
-#                  - backup:DeleteRecoveryPoint
-#                  - backup:CreateBackupPlan
-#                  - backup:TagResource
-#                  - backup:ListTags
-#                  - backup:DescribeBackupJob
-#                  - tag:GetResources
-#                Resource: "*"
-
-  # KMS Key for encryption of backup vault
-#  KMSKey:
-#    Type: AWS::KMS::Key
-#    Properties:
-#      Description: "KMS key for encrypting AWS Backup vault"
-#      KeyPolicy:
-#        Version: "2012-10-17"
-#        Statement:
-#          - Sid: "Enable IAM User Permissions"
-#            Effect: Allow
-#            Principal:
-#              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
-#            Action: "kms:*"
-#            Resource: "*"
