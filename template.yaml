@@ -617,31 +617,33 @@ Resources:
             Principal:
               Service: backup.amazonaws.com
             Action: sts:AssumeRole
-      Policies:
-        - PolicyName: BackupPermissions
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - dynamodb:ListTables
-                  - dynamodb:ListTagsOfResource
-                  - dynamodb:StartAwsBackupJob
-                  - dynamodb:DescribeTable
-                  - s3:ListBucket
-                  - s3:GetObject
-                  - s3:ListAllMyBuckets
-                  - s3:GetBucketTagging
-                  - backup:StartBackupJob
-                  - backup:ListRecoveryPointsByBackupVault
-                  - backup:DeleteBackupPlan
-                  - backup:DeleteRecoveryPoint
-                  - backup:CreateBackupPlan
-                  - backup:TagResource
-                  - backup:ListTags
-                  - backup:DescribeBackupJob
-                  - tag:GetResources
-                Resource: "*"
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
+#      Policies:
+#        - PolicyName: DynamodbBackupPermissions
+#          PolicyDocument:
+#            Version: '2012-10-17'
+#            Statement:
+#              - Effect: Allow
+#                Action:
+#                  - dynamodb:ListTables
+#                  - dynamodb:ListTagsOfResource
+#                  - dynamodb:StartAwsBackupJob
+#                  - dynamodb:DescribeTable
+#                  - s3:ListBucket
+#                  - s3:GetObject
+#                  - s3:ListAllMyBuckets
+#                  - s3:GetBucketTagging
+#                  - backup:StartBackupJob
+#                  - backup:ListRecoveryPointsByBackupVault
+#                  - backup:DeleteBackupPlan
+#                  - backup:DeleteRecoveryPoint
+#                  - backup:CreateBackupPlan
+#                  - backup:TagResource
+#                  - backup:ListTags
+#                  - backup:DescribeBackupJob
+#                  - tag:GetResources
+#                Resource: "*"
 
   # KMS Key for encryption of backup vault
 #  KMSKey:
