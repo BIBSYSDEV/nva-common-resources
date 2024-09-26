@@ -626,6 +626,9 @@ Resources:
                 Action:
                   - dynamodb:ListTables
                   - dynamodb:ListTagsOfResource
+                  - dynamodb:StartAwsBackupJob
+                  - s3:ListBucket
+                  - s3:GetBucket
                   - s3:ListAllMyBuckets
                   - s3:GetBucketTagging
                   - backup:StartBackupJob
