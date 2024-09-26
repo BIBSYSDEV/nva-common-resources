@@ -537,8 +537,8 @@ Resources:
         BackupPlanRule:
           - RuleName: HourlyBackupRule
             TargetBackupVault: !Ref NvaBackupVault
-            ScheduleExpression: 'cron(20 * * * ? *)' # every hour
-            StartWindowMinutes: 10
+            ScheduleExpression: 'cron(0 * * * ? *)' # every hour
+            StartWindowMinutes: 60
             CompletionWindowMinutes: 120
             Lifecycle:
               DeleteAfterDays: 1 # Retain backups for 7 days
