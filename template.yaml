@@ -627,8 +627,9 @@ Resources:
                   - dynamodb:ListTables
                   - dynamodb:ListTagsOfResource
                   - dynamodb:StartAwsBackupJob
+                  - dynamodb:DescribeTable
                   - s3:ListBucket
-                  - s3:GetBucket
+                  - s3:GetObject
                   - s3:ListAllMyBuckets
                   - s3:GetBucketTagging
                   - backup:StartBackupJob
