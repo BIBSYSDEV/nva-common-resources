@@ -588,7 +588,7 @@ Resources:
         IamRoleArn: !GetAtt BackupRole.Arn
         Conditions:
           StringEquals:
-            - ConditionKey: IncludedInBackup
+            - ConditionKey: 'aws:ResourceTag/IncludedInBackup'
               ConditionValue: 'true'
         Resources:
           - arn:aws:dynamodb:*:*:table/*
