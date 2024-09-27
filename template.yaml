@@ -586,12 +586,12 @@ Resources:
       BackupSelection:
         SelectionName: NvaBackupSelection
         IamRoleArn: !GetAtt BackupRole.Arn
-        ListOfTags:
-          - ConditionKey: IncludedInBackup
-            ConditionValue: 'true'
-            ConditionType: STRINGEQUALS
+        Conditions:
+          StringEquals:
+            - ConditionKey: IncludedInBackup
+              ConditionValue: 'true'
         Resources:
-        - arn:aws:dynamodb:*:*:table/*
+          - arn:aws:dynamodb:*:*:table/*
 
   # IAM Role for Backup Service
   BackupRole:
