@@ -544,7 +544,6 @@ Resources:
   #============================== Backup plan ==============================
   NvaBackupPlan:
     Type: AWS::Backup::BackupPlan
-    Condition: CreateBackups
     Properties:
       BackupPlan:
         BackupPlanName: NvaBackupPlan
@@ -589,7 +588,6 @@ Resources:
 
   NvaBackupVault:
     Type: AWS::Backup::BackupVault
-    Condition: CreateBackups
     Properties:
       BackupVaultName: NvaBackupVault
 
@@ -607,10 +605,10 @@ Resources:
               ConditionValue: 'true'
         Resources:
           - arn:aws:dynamodb:*:*:table/*
+          - arn:aws:s3:::*
 
   BackupRole:
     Type: AWS::IAM::Role
-    Condition: CreateBackups
     Properties:
       RoleName: BackupServiceRole
       AssumeRolePolicyDocument:
