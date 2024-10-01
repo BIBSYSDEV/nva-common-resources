@@ -148,10 +148,10 @@ Resources:
         - !Ref SlackSNSTopic
 
 
-  #  #This bucket could belong to the NVA Resources service but being there would
-  #  # prevent us from being able to create and destroy the stack. Also, this bucket is read
-  #  # by the search service, so it is a common resource by definition. The deletion of
-  #  # the NVA Resources service stack should not necessarily break the NVA search service
+  # This bucket could belong to the NVA Resources service but being there would
+  # prevent us from being able to create and destroy the stack. Also, this bucket is read
+  # by the search service, so it is a common resource by definition. The deletion of
+  # the NVA Resources service stack should not necessarily break the NVA search service
   ExpandedResourcesBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -540,7 +540,8 @@ Resources:
       Type: String
       Value: !GetAtt StaticIpSecurityGroup.GroupId
 
-  # AWS Backup Plan
+
+  #============================== Backup plan ==============================
   NvaBackupPlan:
     Type: AWS::Backup::BackupPlan
     Condition: CreateBackups
@@ -586,14 +587,12 @@ Resources:
             RecoveryPointTags:
               BackupType: Quarterly
 
-  # AWS Backup Vault
   NvaBackupVault:
     Type: AWS::Backup::BackupVault
     Condition: CreateBackups
     Properties:
       BackupVaultName: NvaBackupVault
 
-  # Backup Selection
   NvaBackupSelection:
     Type: AWS::Backup::BackupSelection
     Condition: CreateBackups
@@ -609,7 +608,6 @@ Resources:
         Resources:
           - arn:aws:dynamodb:*:*:table/*
 
-  # IAM Role for Backup Service
   BackupRole:
     Type: AWS::IAM::Role
     Condition: CreateBackups
