@@ -56,9 +56,21 @@ Parameters:
     Description: IP range (CIDR notation) for the private subnet
     Type: String
     Default: 10.192.20.0/24
+  UseBackup:
+    Type: String
+    Default: 'true'
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Description: Enable or disable backups for this environment.
 
 Conditions:
   WithSuffix: !Not [ !Equals [ !Ref Suffix, '' ] ]
+  CreateBackups: 
+    Fn::Equals: 
+      - !Ref UseBackup
+      - 'true'
+
 Resources:
 
   NvaEventsBus:
@@ -531,6 +543,7 @@ Resources:
   # AWS Backup Plan
   NvaBackupPlan:
     Type: AWS::Backup::BackupPlan
+    Condition: CreateBackups
     Properties:
       BackupPlan:
         BackupPlanName: NvaBackupPlan
