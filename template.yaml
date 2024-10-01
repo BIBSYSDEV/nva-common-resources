@@ -537,40 +537,41 @@ Resources:
         BackupPlanRule:
           - RuleName: HourlyBackupRule
             TargetBackupVault: !Ref NvaBackupVault
-            ScheduleExpression: 'cron(0 * * * ? *)' # Every hour
+            ScheduleExpression: 'cron(0 */ * * * *)' # Every other hour
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
             Lifecycle:
-              DeleteAfterDays: 3 # Retain backups for 3 days
+              DeleteAfterDays: 2 # Retain backups for 2 days
             RecoveryPointTags:
               BackupType: Hourly
-#          - RuleName: DailyBackupRule
-#            TargetBackupVault: !Ref NvaBackupVault
-#            ScheduleExpression: 'cron(0 0 * * ? *)' # 0 AM UTC daily
-#            StartWindowMinutes: 60
-#            CompletionWindowMinutes: 120
-#            Lifecycle:
-#              DeleteAfterDays: 7 # Retain backups for 7 days
-#            RecoveryPointTags:
-#              BackupType: Daily
-#          - RuleName: WeeklyBackupRule
-#            TargetBackupVault: !Ref NvaBackupVault
-#            ScheduleExpression: 'cron(0 0 ? * 1 *)' # sunday every week at 0:00 UTC
-#            StartWindowMinutes: 60
-#            CompletionWindowMinutes: 120
-#            Lifecycle:
-#              DeleteAfterDays: 28 # Retain backups for 28 days
-#            RecoveryPointTags:
-#              BackupType: Weekly
-#          - RuleName: QuarterlyBackupRule
-#            TargetBackupVault: !Ref NvaBackupVault
-#            ScheduleExpression: 'cron(0 0 1 */3 ? *)' # every quarter
-#            StartWindowMinutes: 60
-#            CompletionWindowMinutes: 120
-#            Lifecycle:
-#              DeleteAfterDays: 365 # Retain backups for 28 days
-#            RecoveryPointTags:
-#              BackupType: Quarterly
+
+          - RuleName: DailyBackupRule
+            TargetBackupVault: !Ref NvaBackupVault
+            ScheduleExpression: 'cron(0 22 * * * *)' # Every day at 22:00
+            StartWindowMinutes: 60
+            CompletionWindowMinutes: 120
+            Lifecycle:
+              DeleteAfterDays: 7 # Retain backups for 7 days
+            RecoveryPointTags:
+              BackupType: Daily
+          - RuleName: WeeklyBackupRule
+            TargetBackupVault: !Ref NvaBackupVault
+            ScheduleExpression: 'cron(0 12 * * 0)' # Every Sunday at 12:00
+            StartWindowMinutes: 60
+            CompletionWindowMinutes: 120
+            Lifecycle:
+              DeleteAfterDays: 28 # Retain backups for 4 weeks
+            RecoveryPointTags:
+              BackupType: Weekly
+          - RuleName: QuarterlyBackupRule
+            TargetBackupVault: !Ref NvaBackupVault
+            ScheduleExpression: 'cron(0 0 1 1,4,7,10 *)' # At start of every quarter
+            StartWindowMinutes: 60
+            CompletionWindowMinutes: 120
+            Lifecycle:
+              DeleteAfterDays: 365 # Retain backups for a year
+            RecoveryPointTags:
+              BackupType: Quarterly
 
   # AWS Backup Vault
   NvaBackupVault:
