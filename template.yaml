@@ -541,7 +541,7 @@ Resources:
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
             Lifecycle:
-              DeleteAfterDays: 1 # Retain backups for 1 day(s)
+              DeleteAfterDays: 3 # Retain backups for 3 days
             RecoveryPointTags:
               BackupType: Hourly
 #          - RuleName: DailyBackupRule
