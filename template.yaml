@@ -589,12 +589,14 @@ Resources:
   # AWS Backup Vault
   NvaBackupVault:
     Type: AWS::Backup::BackupVault
+    Condition: CreateBackups
     Properties:
       BackupVaultName: NvaBackupVault
 
   # Backup Selection
   NvaBackupSelection:
     Type: AWS::Backup::BackupSelection
+    Condition: CreateBackups
     Properties:
       BackupPlanId: !Ref NvaBackupPlan
       BackupSelection:
@@ -610,6 +612,7 @@ Resources:
   # IAM Role for Backup Service
   BackupRole:
     Type: AWS::IAM::Role
+    Condition: CreateBackups
     Properties:
       RoleName: BackupServiceRole
       AssumeRolePolicyDocument:
