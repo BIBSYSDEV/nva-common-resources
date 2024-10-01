@@ -58,7 +58,7 @@ Parameters:
     Default: 10.192.20.0/24
   UseBackup:
     Type: String
-    Default: 'true'
+    Default: 'false'
     AllowedValues:
       - 'true'
       - 'false'
