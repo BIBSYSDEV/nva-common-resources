@@ -56,9 +56,21 @@ Parameters:
     Description: IP range (CIDR notation) for the private subnet
     Type: String
     Default: 10.192.20.0/24
+  UseBackup:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Description: Enable or disable backups for this environment.
 
 Conditions:
   WithSuffix: !Not [ !Equals [ !Ref Suffix, '' ] ]
+  CreateBackups: 
+    Fn::Equals: 
+      - !Ref UseBackup
+      - 'true'
+
 Resources:
 
   NvaEventsBus:
@@ -90,7 +102,7 @@ Resources:
   EventsBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName:  !If
+      BucketName: !If
         - WithSuffix
         - !Sub 'eventbridge-event-bodies-${AWS::AccountId}-${Suffix}'
         - !Sub 'eventbridge-event-bodies-${AWS::AccountId}'
@@ -103,17 +115,17 @@ Resources:
       VersioningConfiguration:
         Status: Suspended
 
-  ChatbotRole: 
+  ChatbotRole:
     Type: "AWS::IAM::Role"
-    Properties: 
-      AssumeRolePolicyDocument: 
+    Properties:
+      AssumeRolePolicyDocument:
         Version: "2012-10-17"
-        Statement: 
+        Statement:
           - Effect: "Allow"
-            Principal: 
-              Service: 
+            Principal:
+              Service:
                 - "chatbot.amazonaws.com"
-            Action: 
+            Action:
               - "sts:AssumeRole"
       Path: "/"
       ManagedPolicyArns:
@@ -126,20 +138,20 @@ Resources:
 
   NvaSlackChannel:
     Type: AWS::Chatbot::SlackChannelConfiguration
-    Properties: 
+    Properties:
       ConfigurationName: nva-monitoring
       IamRoleArn: !GetAtt ChatbotRole.Arn
       LoggingLevel: INFO
       SlackChannelId: !Ref SlackChannelId
       SlackWorkspaceId: !Ref SlackWorkspaceId
-      SnsTopicArns: 
+      SnsTopicArns:
         - !Ref SlackSNSTopic
 
 
-#  #This bucket could belong to the NVA Resources service but being there would
-#  # prevent us from being able to create and destroy the stack. Also, this bucket is read
-#  # by the search service, so it is a common resource by definition. The deletion of
-#  # the NVA Resources service stack should not necessarily break the NVA search service
+  # This bucket could belong to the NVA Resources service but being there would
+  # prevent us from being able to create and destroy the stack. Also, this bucket is read
+  # by the search service, so it is a common resource by definition. The deletion of
+  # the NVA Resources service stack should not necessarily break the NVA search service
   ExpandedResourcesBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -182,10 +194,10 @@ Resources:
         - !Sub 'nva-resource-storage-${AWS::AccountId}'
       CorsConfiguration:
         CorsRules:
-          - AllowedHeaders: ['*']
-            AllowedMethods: [GET, PUT, POST, HEAD]
-            AllowedOrigins: ['*']
-            ExposedHeaders: [ETag]
+          - AllowedHeaders: [ '*' ]
+            AllowedMethods: [ GET, PUT, POST, HEAD ]
+            AllowedOrigins: [ '*' ]
+            ExposedHeaders: [ ETag ]
       LifecycleConfiguration:
         Rules:
           - Id: RemoveFailedUploads
@@ -242,13 +254,13 @@ Resources:
       CidrBlock: !Ref VpcCIDR
       EnableDnsSupport: true
       EnableDnsHostnames: true
-      Tags: 
+      Tags:
         - Key: Name
           Value: !Sub nva-${EnvironmentName}-static-ip-vpc
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
-      Tags: 
+      Tags:
         - Key: Name
           Value: !Sub nva-${EnvironmentName}-static-ip-igw
   InternetGatewayAttachment:
@@ -262,7 +274,7 @@ Resources:
       VpcId: !Ref VPC
       CidrBlock: !Ref PublicSubnetCIDR
       MapPublicIpOnLaunch: true
-      Tags: 
+      Tags:
         - Key: Name
           Value: !Sub nva-${EnvironmentName}-static-ip-public-subnet
   PrivateSubnet:
@@ -271,7 +283,7 @@ Resources:
       VpcId: !Ref VPC
       CidrBlock: !Ref PrivateSubnetCIDR
       MapPublicIpOnLaunch: false
-      Tags: 
+      Tags:
         - Key: Name
           Value: !Sub nva-${EnvironmentName}-static-ip-private-subnet
 
@@ -289,7 +301,7 @@ Resources:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
-      Tags: 
+      Tags:
         - Key: Name
           Value: !Sub nva-${EnvironmentName}-static-ip-public-routes
   DefaultPublicRoute:
@@ -308,7 +320,7 @@ Resources:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
-      Tags: 
+      Tags:
         - Key: Name
           Value: !Sub nva-${EnvironmentName}-static-ip-private-routes
   DefaultPrivateRoute:
@@ -329,7 +341,7 @@ Resources:
       GroupDescription: "Security group with no ingress rule for static IP"
       VpcId: !Ref VPC
 
-#================================= Parameters ============================================================
+  #================================= Parameters ============================================================
 
   EventsBucketName:
     Type: AWS::SSM::Parameter
@@ -527,3 +539,85 @@ Resources:
       Name: "/NVA/EIP/SecurityGroup/GroupId"
       Type: String
       Value: !GetAtt StaticIpSecurityGroup.GroupId
+
+
+  #============================== Backup plan ==============================
+  NvaBackupPlan:
+    Type: AWS::Backup::BackupPlan
+    Properties:
+      BackupPlan:
+        BackupPlanName: NvaBackupPlan
+        BackupPlanRule:
+          - RuleName: HourlyBackupRule
+            TargetBackupVault: !Ref NvaBackupVault
+            ScheduleExpression: 'cron(0 */2 * * ?)' # Every other hour
+            StartWindowMinutes: 60
+            CompletionWindowMinutes: 120
+            Lifecycle:
+              DeleteAfterDays: 2 # Retain backups for 2 days
+            RecoveryPointTags:
+              BackupType: Hourly
+
+          - RuleName: DailyBackupRule
+            TargetBackupVault: !Ref NvaBackupVault
+            ScheduleExpression: 'cron(0 22 * * ?)' # Every day at 22:00
+            StartWindowMinutes: 60
+            CompletionWindowMinutes: 120
+            Lifecycle:
+              DeleteAfterDays: 7 # Retain backups for 7 days
+            RecoveryPointTags:
+              BackupType: Daily
+          - RuleName: WeeklyBackupRule
+            TargetBackupVault: !Ref NvaBackupVault
+            ScheduleExpression: 'cron(0 12 ? * 1)' # Every Sunday at 12:00
+            StartWindowMinutes: 60
+            CompletionWindowMinutes: 120
+            Lifecycle:
+              DeleteAfterDays: 28 # Retain backups for 4 weeks
+            RecoveryPointTags:
+              BackupType: Weekly
+          - RuleName: QuarterlyBackupRule
+            TargetBackupVault: !Ref NvaBackupVault
+            ScheduleExpression: 'cron(0 0 1 1,4,7,10 ?)' # At start of every quarter
+            StartWindowMinutes: 60
+            CompletionWindowMinutes: 120
+            Lifecycle:
+              DeleteAfterDays: 365 # Retain backups for a year
+            RecoveryPointTags:
+              BackupType: Quarterly
+
+  NvaBackupVault:
+    Type: AWS::Backup::BackupVault
+    Properties:
+      BackupVaultName: NvaBackupVault
+
+  NvaBackupSelection:
+    Type: AWS::Backup::BackupSelection
+    Condition: CreateBackups
+    Properties:
+      BackupPlanId: !Ref NvaBackupPlan
+      BackupSelection:
+        SelectionName: NvaBackupSelection
+        IamRoleArn: !GetAtt BackupRole.Arn
+        Conditions:
+          StringEquals:
+            - ConditionKey: 'aws:ResourceTag/IncludedInBackup'
+              ConditionValue: 'true'
+        Resources:
+          - arn:aws:dynamodb:*:*:table/*
+          - arn:aws:s3:::*
+
+  BackupRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: BackupServiceRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: backup.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AWSBackupServiceRolePolicyForS3Backup"
