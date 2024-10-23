@@ -628,10 +628,10 @@ Resources:
       LogGroupName: !Sub '/aws/lambda/${LambdaVersionCleanupFunction}'
       RetentionInDays: 90
 
-  # Lambda function to delete old versions
   LambdaVersionCleanupFunction:
     Type: AWS::Serverless::Function
     Properties:
+      Description: 'Lambda function to delete old version of all lambda functions'
       Handler: delete_old_lambda_versions.lambda_handler
       Runtime: python3.11
       Timeout: 900
@@ -639,17 +639,17 @@ Resources:
       Role: !GetAtt LambdaVersionCleanupRole.Arn
       CodeUri: .
       Events:
-          # Optional: Schedule to trigger the Lambda function
           ScheduledEvent:
             Type: Schedule
             Properties:
-              Schedule: rate(7 days)  # Run every 7 days
+              Description: 'Schedule to trigger deletion of old versions of lambda functions'
+              Schedule: rate(7 days)
               Name: CleanupLambdaVersionSchedule
 
-  # IAM Role for the Lambda function
   LambdaVersionCleanupRole:
     Type: AWS::IAM::Role
     Properties:
+      Description: 'IAM role for the lamda that deletes old versions of all lambda functions'
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
