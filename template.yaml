@@ -634,7 +634,7 @@ Resources:
     Properties:
       Handler: delete_old_lambda_versions.lambda_handler
       Runtime: python3.11
-      Timeout: 60
+      Timeout: 900
       MemorySize: 128
       Role: !GetAtt LambdaVersionCleanupRole.Arn
       CodeUri: .
