@@ -667,6 +667,7 @@ Resources:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
+                  - lambda:ListAliases
                   - lambda:ListFunctions
                   - lambda:ListVersionsByFunction
                   - lambda:DeleteFunction
