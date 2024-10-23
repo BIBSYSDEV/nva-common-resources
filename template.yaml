@@ -66,8 +66,8 @@ Parameters:
 
 Conditions:
   WithSuffix: !Not [ !Equals [ !Ref Suffix, '' ] ]
-  CreateBackups: 
-    Fn::Equals: 
+  CreateBackups:
+    Fn::Equals:
       - !Ref UseBackup
       - 'true'
 
@@ -621,3 +621,51 @@ Resources:
       ManagedPolicyArns:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/AWSBackupServiceRolePolicyForS3Backup"
+
+  # Lambda function to delete old versions
+  LambdaVersionCleanupFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: delete_old_lambda_versions.lambda_handler
+      Runtime: python3.9
+      Timeout: 60
+      MemorySize: 128
+      Role: !GetAtt LambdaVersionCleanupRole.Arn
+      CodeUri: .
+      Events:
+          # Optional: Schedule to trigger the Lambda function
+          ScheduledEvent:
+            Type: Schedule
+            Properties:
+              Schedule: rate(7 days)  # Run every 7 days
+              Name: CleanupLambdaVersionSchedule
+
+  # IAM Role for the Lambda function
+  LambdaVersionCleanupRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaVersionCleanupPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - lambda:ListVersionsByFunction
+                  - lambda:DeleteFunction
+                Resource: "*"
+
+Outputs:
+  LambdaVersionCleanupFunction:
+    Description: "ARN of the version cleanup Lambda function"
+    Value: !GetAtt LambdaVersionCleanupFunction.Arn
