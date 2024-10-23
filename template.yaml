@@ -622,6 +622,12 @@ Resources:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/AWSBackupServiceRolePolicyForS3Backup"
 
+  LambdaVersionCleanupFunctionAccessLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${LambdaVersionCleanupFunction}'
+      RetentionInDays: 90
+
   # Lambda function to delete old versions
   LambdaVersionCleanupFunction:
     Type: AWS::Serverless::Function
