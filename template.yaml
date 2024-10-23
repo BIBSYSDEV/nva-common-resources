@@ -667,7 +667,7 @@ Resources:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
-                  - lambda.ListFunctions
+                  - lambda:ListFunctions
                   - lambda:ListVersionsByFunction
                   - lambda:DeleteFunction
                 Resource: "*"
