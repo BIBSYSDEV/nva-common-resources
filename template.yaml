@@ -67,7 +67,7 @@ Parameters:
     Default: 10.192.20.0/24
   SharedBackupVaultArn:
     Type: String
-    Description: ARN of the shared backup vault for copying backups to another account.
+    Description: ARN of the shared backup vault for this environment. Backups are copied to this vault.
     Default: ''
   UseBackup:
     Type: String
