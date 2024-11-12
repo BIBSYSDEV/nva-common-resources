@@ -592,6 +592,10 @@ Resources:
               DeleteAfterDays: !Ref DaysToRetainHourlyBackup
             RecoveryPointTags:
               BackupType: Hourly
+            CopyActions:
+              - DestinationBackupVaultArn: !Ref SharedBackupVaultArn
+                Lifecycle:
+                  DeleteAfterDays: !Ref DaysToRetainHourlyBackup
 
           - RuleName: DailyBackupRule
             TargetBackupVault: !Ref NvaBackupVault
@@ -604,6 +608,8 @@ Resources:
               BackupType: Daily
             CopyActions:
               - DestinationBackupVaultArn: !Ref SharedBackupVaultArn
+                Lifecycle:
+                  DeleteAfterDays: !Ref DaysToRetainDailyBackup
 
           - RuleName: WeeklyBackupRule
             TargetBackupVault: !Ref NvaBackupVault
@@ -616,6 +622,8 @@ Resources:
               BackupType: Weekly
             CopyActions:
               - DestinationBackupVaultArn: !Ref SharedBackupVaultArn
+                Lifecycle:
+                  DeleteAfterDays: !Ref DaysToRetainWeeklyBackup
 
           - RuleName: QuarterlyBackupRule
             TargetBackupVault: !Ref NvaBackupVault
@@ -628,6 +636,8 @@ Resources:
               BackupType: Quarterly
             CopyActions:
               - DestinationBackupVaultArn: !Ref SharedBackupVaultArn
+                Lifecycle:
+                  DeleteAfterDays: !Ref DaysToRetainQuarterlyBackup
 
   NvaBackupVault:
     Type: AWS::Backup::BackupVault
