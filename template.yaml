@@ -3,6 +3,15 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   AWS  SAM Template for common resources between NVA stacks
 
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Backup configuration
+        Parameters:
+          - SharedBackupVaultArn
+          - UseBackup
+
 
 Parameters:
   BackendDomainCertificateArn:
@@ -56,6 +65,10 @@ Parameters:
     Description: IP range (CIDR notation) for the private subnet
     Type: String
     Default: 10.192.20.0/24
+  SharedBackupVaultArn:
+    Type: String
+    Description: ARN of the shared backup vault for copying backups to another account.
+    Default: ''
   UseBackup:
     Type: String
     Default: 'false'
@@ -567,6 +580,9 @@ Resources:
               DeleteAfterDays: 7 # Retain backups for 7 days
             RecoveryPointTags:
               BackupType: Daily
+            CopyActions:
+              - DestinationBackupVaultArn: !Ref SharedBackupVaultArn
+
           - RuleName: WeeklyBackupRule
             TargetBackupVault: !Ref NvaBackupVault
             ScheduleExpression: 'cron(0 12 ? * 1)' # Every Sunday at 12:00
@@ -576,6 +592,9 @@ Resources:
               DeleteAfterDays: 28 # Retain backups for 4 weeks
             RecoveryPointTags:
               BackupType: Weekly
+            CopyActions:
+              - DestinationBackupVaultArn: !Ref SharedBackupVaultArn
+
           - RuleName: QuarterlyBackupRule
             TargetBackupVault: !Ref NvaBackupVault
             ScheduleExpression: 'cron(0 0 1 1,4,7,10 ?)' # At start of every quarter
@@ -585,6 +604,8 @@ Resources:
               DeleteAfterDays: 365 # Retain backups for a year
             RecoveryPointTags:
               BackupType: Quarterly
+            CopyActions:
+              - DestinationBackupVaultArn: !Ref SharedBackupVaultArn
 
   NvaBackupVault:
     Type: AWS::Backup::BackupVault
