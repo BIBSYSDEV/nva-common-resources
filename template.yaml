@@ -90,7 +90,6 @@ Parameters:
   SharedBackupVaultArn:
     Type: String
     Description: ARN of the shared backup vault for this environment. Backups are copied to this vault.
-    Default: ''
   UseBackup:
     Type: String
     Default: 'false'
