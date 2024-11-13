@@ -3,6 +3,19 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   AWS  SAM Template for common resources between NVA stacks
 
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Backup configuration
+        Parameters:
+          - DaysToRetainHourlyBackup
+          - DaysToRetainDailyBackup
+          - DaysToRetainWeeklyBackup
+          - DaysToRetainQuarterlyBackup
+          - SharedBackupVaultArn
+          - UseBackup
+
 
 Parameters:
   BackendDomainCertificateArn:
@@ -56,13 +69,34 @@ Parameters:
     Description: IP range (CIDR notation) for the private subnet
     Type: String
     Default: 10.192.20.0/24
+
+  # Backup configuration
+  DaysToRetainHourlyBackup:
+    Type: Number
+    Default: 2
+    Description: Number of days to retain hourly backups
+  DaysToRetainDailyBackup:
+    Type: Number
+    Default: 7
+    Description: Number of days to retain daily backups
+  DaysToRetainWeeklyBackup:
+    Type: Number
+    Default: 28
+    Description: Number of days to retain weekly backups
+  DaysToRetainQuarterlyBackup:
+    Type: Number
+    Default: 365
+    Description: Number of days to retain quarterly backups
+  SharedBackupVaultArn:
+    Type: String
+    Description: ARN of the shared backup vault for this environment. Backups are copied to this vault.
   UseBackup:
     Type: String
     Default: 'false'
     AllowedValues:
       - 'true'
       - 'false'
-    Description: Enable or disable backups for this environment.
+    Description: Enable or disable backups for this environment
 
 Conditions:
   WithSuffix: !Not [ !Equals [ !Ref Suffix, '' ] ]
@@ -554,9 +588,13 @@ Resources:
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
             Lifecycle:
-              DeleteAfterDays: 2 # Retain backups for 2 days
+              DeleteAfterDays: !Ref DaysToRetainHourlyBackup
             RecoveryPointTags:
               BackupType: Hourly
+            CopyActions:
+              - DestinationBackupVaultArn: !Ref SharedBackupVaultArn
+                Lifecycle:
+                  DeleteAfterDays: !Ref DaysToRetainHourlyBackup
 
           - RuleName: DailyBackupRule
             TargetBackupVault: !Ref NvaBackupVault
@@ -564,27 +602,41 @@ Resources:
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
             Lifecycle:
-              DeleteAfterDays: 7 # Retain backups for 7 days
+              DeleteAfterDays: !Ref DaysToRetainDailyBackup
             RecoveryPointTags:
               BackupType: Daily
+            CopyActions:
+              - DestinationBackupVaultArn: !Ref SharedBackupVaultArn
+                Lifecycle:
+                  DeleteAfterDays: !Ref DaysToRetainDailyBackup
+
           - RuleName: WeeklyBackupRule
             TargetBackupVault: !Ref NvaBackupVault
             ScheduleExpression: 'cron(0 12 ? * 1)' # Every Sunday at 12:00
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
             Lifecycle:
-              DeleteAfterDays: 28 # Retain backups for 4 weeks
+              DeleteAfterDays: !Ref DaysToRetainWeeklyBackup
             RecoveryPointTags:
               BackupType: Weekly
+            CopyActions:
+              - DestinationBackupVaultArn: !Ref SharedBackupVaultArn
+                Lifecycle:
+                  DeleteAfterDays: !Ref DaysToRetainWeeklyBackup
+
           - RuleName: QuarterlyBackupRule
             TargetBackupVault: !Ref NvaBackupVault
             ScheduleExpression: 'cron(0 0 1 1,4,7,10 ?)' # At start of every quarter
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
             Lifecycle:
-              DeleteAfterDays: 365 # Retain backups for a year
+              DeleteAfterDays: !Ref DaysToRetainQuarterlyBackup
             RecoveryPointTags:
               BackupType: Quarterly
+            CopyActions:
+              - DestinationBackupVaultArn: !Ref SharedBackupVaultArn
+                Lifecycle:
+                  DeleteAfterDays: !Ref DaysToRetainQuarterlyBackup
 
   NvaBackupVault:
     Type: AWS::Backup::BackupVault
