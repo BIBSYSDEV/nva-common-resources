@@ -584,7 +584,7 @@ Resources:
         BackupPlanRule:
           - RuleName: HourlyBackupRule
             TargetBackupVault: !Ref NvaBackupVault
-            ScheduleExpression: 'cron(0 */2 * * ?)' # Every other hour
+            ScheduleExpression: 'cron(0 */2 * * ? *)' # Every other hour
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
             Lifecycle:
@@ -598,7 +598,7 @@ Resources:
 
           - RuleName: DailyBackupRule
             TargetBackupVault: !Ref NvaBackupVault
-            ScheduleExpression: 'cron(0 22 * * ?)' # Every day at 22:00
+            ScheduleExpression: 'cron(0 22 * * ? *)' # Every day at 22:00
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
             Lifecycle:
@@ -612,7 +612,7 @@ Resources:
 
           - RuleName: WeeklyBackupRule
             TargetBackupVault: !Ref NvaBackupVault
-            ScheduleExpression: 'cron(0 12 ? * 1)' # Every Sunday at 12:00
+            ScheduleExpression: 'cron(0 12 ? * 1 *)' # Every Sunday at 12:00
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
             Lifecycle:
@@ -626,7 +626,7 @@ Resources:
 
           - RuleName: QuarterlyBackupRule
             TargetBackupVault: !Ref NvaBackupVault
-            ScheduleExpression: 'cron(0 0 1 1,4,7,10 ?)' # At start of every quarter
+            ScheduleExpression: 'cron(0 0 1 1,4,7,10 ? *)' # At start of every quarter
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
             Lifecycle:
