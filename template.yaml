@@ -14,6 +14,7 @@ Metadata:
           - DaysToRetainWeeklyBackup
           - DaysToRetainQuarterlyBackup
           - SharedBackupVaultArn
+          - SharedBackupAccountId
           - UseBackup
 
 
@@ -90,6 +91,9 @@ Parameters:
   SharedBackupVaultArn:
     Type: String
     Description: ARN of the shared backup vault for this environment. Backups are copied to this vault.
+  SharedBackupAccountId:
+    Type: String
+    Description: Account ID of the shared backup account
   UseBackup:
     Type: String
     Default: 'false'
@@ -642,6 +646,18 @@ Resources:
     Type: AWS::Backup::BackupVault
     Properties:
       BackupVaultName: NvaBackupVault
+      AccessPolicy:
+        Version: "2012-10-17"
+        Statement:
+          # Allow the cross-account vault to copy snapshots into this vault,
+          # necessary for cross-region restores.
+          - Sid: AllowCopyFromSharedVault
+            Effect: Allow
+            Principal:
+              AWS: !Ref SharedBackupAccountId
+            Action:
+              - backup:CopyIntoBackupVault
+            Resource: '*'
 
   NvaBackupSelection:
     Type: AWS::Backup::BackupSelection
