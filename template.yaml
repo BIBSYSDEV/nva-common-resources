@@ -14,6 +14,7 @@ Metadata:
           - DaysToRetainWeeklyBackup
           - DaysToRetainQuarterlyBackup
           - SharedBackupVaultArn
+          - SharedBackupAccountId
           - UseBackup
 
 
@@ -90,6 +91,9 @@ Parameters:
   SharedBackupVaultArn:
     Type: String
     Description: ARN of the shared backup vault for this environment. Backups are copied to this vault.
+  SharedBackupAccountId:
+    Type: String
+    Description: Account ID of the shared backup account
   UseBackup:
     Type: String
     Default: 'false'
@@ -584,9 +588,10 @@ Resources:
         BackupPlanRule:
           - RuleName: HourlyBackupRule
             TargetBackupVault: !Ref NvaBackupVault
-            ScheduleExpression: 'cron(0 */2 * * ?)' # Every other hour
+            ScheduleExpression: 'cron(0 */2 * * ? *)' # Every other hour
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
+            EnableContinuousBackup: true
             Lifecycle:
               DeleteAfterDays: !Ref DaysToRetainHourlyBackup
             RecoveryPointTags:
@@ -598,9 +603,10 @@ Resources:
 
           - RuleName: DailyBackupRule
             TargetBackupVault: !Ref NvaBackupVault
-            ScheduleExpression: 'cron(0 22 * * ?)' # Every day at 22:00
+            ScheduleExpression: 'cron(0 22 * * ? *)' # Every day at 22:00
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
+            EnableContinuousBackup: true
             Lifecycle:
               DeleteAfterDays: !Ref DaysToRetainDailyBackup
             RecoveryPointTags:
@@ -612,9 +618,10 @@ Resources:
 
           - RuleName: WeeklyBackupRule
             TargetBackupVault: !Ref NvaBackupVault
-            ScheduleExpression: 'cron(0 12 ? * 1)' # Every Sunday at 12:00
+            ScheduleExpression: 'cron(0 12 ? * 1 *)' # Every Sunday at 12:00
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
+            EnableContinuousBackup: true
             Lifecycle:
               DeleteAfterDays: !Ref DaysToRetainWeeklyBackup
             RecoveryPointTags:
@@ -626,9 +633,10 @@ Resources:
 
           - RuleName: QuarterlyBackupRule
             TargetBackupVault: !Ref NvaBackupVault
-            ScheduleExpression: 'cron(0 0 1 1,4,7,10 ?)' # At start of every quarter
+            ScheduleExpression: 'cron(0 0 1 1,4,7,10 ? *)' # At start of every quarter
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
+            EnableContinuousBackup: true
             Lifecycle:
               DeleteAfterDays: !Ref DaysToRetainQuarterlyBackup
             RecoveryPointTags:
@@ -642,6 +650,18 @@ Resources:
     Type: AWS::Backup::BackupVault
     Properties:
       BackupVaultName: NvaBackupVault
+      AccessPolicy:
+        Version: "2012-10-17"
+        Statement:
+          # Allow the cross-account vault to copy snapshots into this vault,
+          # necessary for cross-region restores.
+          - Sid: AllowCopyFromSharedVault
+            Effect: Allow
+            Principal:
+              AWS: !Ref SharedBackupAccountId
+            Action:
+              - backup:CopyIntoBackupVault
+            Resource: '*'
 
   NvaBackupSelection:
     Type: AWS::Backup::BackupSelection
