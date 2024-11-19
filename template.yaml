@@ -593,7 +593,7 @@ Resources:
       ApplicationId: !Ref ApplicationConfig
       Description: Application Configuration Profile for ApplicationConfig
       Name: /NVA/ConfigurationProfile/ApplicationConfigurationProfile
-      LocationUri: /NVA/ApplicationConfigurationProfile
+      LocationUri: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/NVA/ApplicationConfigurationProfile'
       RetrievalRoleArn: !GetAtt ApplicationConfigRole.Arn
 
 
