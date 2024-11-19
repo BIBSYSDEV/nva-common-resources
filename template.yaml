@@ -608,8 +608,15 @@ Resources:
     Properties:
       ApplicationId: !Ref ApplicationConfig
       ConfigurationProfileId: !Ref ApplicationConfigurationProfile
-      Content: ''
       ContentType: application/json
+      Content: | 
+        { 
+          "cache": {
+            "publication-channels": {
+              "enabled": true
+            }
+          } 
+        }
 
   ApplicationConfigRole:
     Type: 'AWS::IAM::Role'
