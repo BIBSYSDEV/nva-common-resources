@@ -621,7 +621,7 @@ Resources:
             ScheduleExpression: 'cron(0 12 ? * 1 *)' # Every Sunday at 12:00
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
-            EnableContinuousBackup: true
+            EnableContinuousBackup: false # PITR limits retention to 35 days
             Lifecycle:
               DeleteAfterDays: !Ref DaysToRetainWeeklyBackup
             RecoveryPointTags:
@@ -636,7 +636,7 @@ Resources:
             ScheduleExpression: 'cron(0 0 1 1,4,7,10 ? *)' # At start of every quarter
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
-            EnableContinuousBackup: true
+            EnableContinuousBackup: false # PITR limits retention to 35 days
             Lifecycle:
               DeleteAfterDays: !Ref DaysToRetainQuarterlyBackup
             RecoveryPointTags:
