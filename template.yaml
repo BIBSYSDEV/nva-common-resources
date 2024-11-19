@@ -587,7 +587,39 @@ Resources:
       Description: Application Configuration for whole NVA application
       Name: /NVA/ApplicationConfig
 
+  ApplicationConfigurationProfile:
+    Type: 'AWS::AppConfig::ConfigurationProfile'
+    Properties:
+      ApplicationId: !Ref ApplicationConfig
+      Description: Application Configuration Profile for ApplicationConfig
+      Name: /NVA/ConfigurationProfile/ApplicationConfigurationProfile
+      LocationUri: /NVA/ApplicationConfigurationProfile
+      RetrievalRoleArn: !GetAtt ApplicationConfigRole.Arn
+
+
+  ApplicationConfigRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: appconfig.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ConfigurationProfileSSMPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource: !Sub 'arn::ssm:${AWS::Region}:${AWS::AccountId}:parameter/NVA/ApplicationConfigurationProfile'
+
+
   #============================== Backup plan ==============================
+
   NvaBackupPlan:
     Type: AWS::Backup::BackupPlan
     Properties:
