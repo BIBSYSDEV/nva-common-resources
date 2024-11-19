@@ -585,14 +585,14 @@ Resources:
     Type: 'AWS::AppConfig::Application'
     Properties:
       Description: Application Configuration for whole NVA application
-      Name: NVAApplicationConfig
+      Name: ApplicationConfig
 
   ApplicationConfigurationProfile:
     Type: 'AWS::AppConfig::ConfigurationProfile'
     Properties:
       ApplicationId: !Ref ApplicationConfig
       Description: Application Configuration Profile for ApplicationConfig
-      Name: NVAConfiguration
+      Name: ApplicationConfiguration
       LocationUri: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ApplicationConfigurationParameter'
       RetrievalRoleArn: !GetAtt ApplicationConfigRole.Arn
 
@@ -602,6 +602,14 @@ Resources:
       ApplicationId: !Ref ApplicationConfig
       Description: Environment for application configuration
       Name: Live
+
+  ApplicationConfigurationVersion:
+    Type: AWS::AppConfig::HostedConfigurationVersion
+    Properties:
+      ApplicationId: !Ref ApplicationConfig
+      ConfigurationProfileId: !Ref ApplicationConfigurationProfile
+      Content: ''
+      ContentType: application/json
 
   ApplicationConfigRole:
     Type: 'AWS::IAM::Role'
