@@ -609,7 +609,7 @@ Resources:
       ApplicationId: !Ref ApplicationConfig
       ConfigurationProfileId: !Ref ApplicationConfigurationProfile
       ContentType: application/json
-      Content: | 
+      Content: '{}'
 
   ApplicationConfigRole:
     Type: 'AWS::IAM::Role'
