@@ -70,6 +70,18 @@ Parameters:
     Description: IP range (CIDR notation) for the private subnet
     Type: String
     Default: 10.192.20.0/24
+  AppConfigName:
+    Type: String
+    Description: Name of the AppConfig application
+    Default: ApplicationConfig
+  ApplicationConfigurationProfileName:
+    Type: String
+    Description: Name of the AppConfig application configuration profile
+    Default: ApplicationConfigurationProfile
+  ApplicationEnvironmentName:
+    Type: String
+    Description: Name of the AppConfig application environment
+    Default: Live
 
   # Backup configuration
   DaysToRetainHourlyBackup:
@@ -585,14 +597,14 @@ Resources:
     Type: 'AWS::AppConfig::Application'
     Properties:
       Description: Application Configuration for whole NVA application
-      Name: ApplicationConfig
+      Name: !Ref AppConfigName
 
   ApplicationConfigurationProfile:
     Type: 'AWS::AppConfig::ConfigurationProfile'
     Properties:
       ApplicationId: !Ref ApplicationConfig
       Description: Application Configuration Profile for ApplicationConfig
-      Name: ApplicationConfigurationProfile
+      Name: !Ref ApplicationConfigurationProfileName
       LocationUri: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ApplicationConfigurationParameter'
       RetrievalRoleArn: !GetAtt ApplicationConfigRole.Arn
 
@@ -601,7 +613,7 @@ Resources:
     Properties:
       ApplicationId: !Ref ApplicationConfig
       Description: Environment for application configuration
-      Name: Live
+      Name: !Ref ApplicationEnvironmentName
 
   ApplicationConfigurationVersion:
     Type: AWS::AppConfig::HostedConfigurationVersion
@@ -643,21 +655,21 @@ Resources:
     Properties:
       Name: /NVA/AppConfig/ApplicationConfigName
       Type: String
-      Value: !GetAtt ApplicationConfig.Name
+      Value: !Ref AppConfigName
 
   ConfigurationProfileNameParameter:
     Type: AWS::SSM::Parameter
     Properties:
       Name: /NVA/AppConfig/ApplicationConfigProfileName
       Type: String
-      Value: !GetAtt ApplicationConfigurationProfile.Name
+      Value: !Ref ApplicationConfigurationProfileName
 
   EnvironmentNameParameter:
     Type: AWS::SSM::Parameter
     Properties:
       Name: /NVA/AppConfig/ApplicationEnvironmentName
       Type: String
-      Value: !GetAtt ApplicationEnvironment.Name
+      Value: !Ref ApplicationEnvironmentName
 
 
   #============================== Backup plan ==============================
