@@ -634,9 +634,30 @@ Resources:
   ApplicationConfigId:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: /NVA/AppConfig/ApplicationConfigName
+      Name: /NVA/AppConfig/ApplicationConfigId
       Type: String
       Value: !Ref ApplicationConfig
+
+  ApplicationConfigName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /NVA/AppConfig/ApplicationConfigName
+      Type: String
+      Value: !GetAtt ApplicationConfig.Name
+
+  ConfigurationProfileNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /NVA/AppConfig/ApplicationConfigProfileName
+      Type: String
+      Value: !GetAtt ApplicationConfigurationProfile.Name
+
+  EnvironmentNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /NVA/AppConfig/ApplicationEnvironmentName
+      Type: String
+      Value: !GetAtt ApplicationEnvironment.Name
 
 
   #============================== Backup plan ==============================
