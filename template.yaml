@@ -815,7 +815,3 @@ Outputs:
   EnvironmentName:
     Description: The name of the AppConfig Environment
     Value: !Ref ApplicationEnvironment
-
-  ApplicationConfigId:
-    Description: The id of the AppConfig Application
-    Value: !GetAtt ApplicationConfig.Id
