@@ -592,7 +592,7 @@ Resources:
     Properties:
       ApplicationId: !Ref ApplicationConfig
       Description: Application Configuration Profile for ApplicationConfig
-      Name: ApplicationConfiguration
+      Name: ApplicationConfigurationProfile
       LocationUri: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ApplicationConfigurationParameter'
       RetrievalRoleArn: !GetAtt ApplicationConfigRole.Arn
 
@@ -610,13 +610,6 @@ Resources:
       ConfigurationProfileId: !Ref ApplicationConfigurationProfile
       ContentType: application/json
       Content: | 
-        { 
-          "cache": {
-            "publication-channels": {
-              "enabled": true
-            }
-          } 
-        }
 
   ApplicationConfigRole:
     Type: 'AWS::IAM::Role'
@@ -810,3 +803,19 @@ Outputs:
   LambdaVersionCleanupFunction:
     Description: "ARN of the version cleanup Lambda function"
     Value: !GetAtt LambdaVersionCleanupFunction.Arn
+
+  ApplicationConfigName:
+    Description: The name of the AppConfig Application
+    Value: !Ref ApplicationConfig
+
+  ConfigurationProfileName:
+    Description: The name of the AppConfig Configuration Profile
+    Value: !Ref ApplicationConfigurationProfile
+
+  EnvironmentName:
+    Description: The name of the AppConfig Environment
+    Value: !Ref ApplicationEnvironment
+
+  ApplicationConfigId:
+    Description: The id of the AppConfig Application
+    Value: !GetAtt ApplicationConfig.Id
