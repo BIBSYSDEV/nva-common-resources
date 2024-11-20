@@ -631,26 +631,12 @@ Resources:
                   - ssm:GetParameter
                 Resource: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ApplicationConfigurationParameter'
 
-  ApplicationConfigNameParameter:
+  ApplicationConfigId:
     Type: AWS::SSM::Parameter
     Properties:
       Name: /NVA/AppConfig/ApplicationConfigName
       Type: String
       Value: !Ref ApplicationConfig
-
-  ConfigurationProfileNameParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: /NVA/AppConfig/ApplicationConfigProfileName
-      Type: String
-      Value: !Ref ApplicationConfigurationProfile
-
-  EnvironmentNameParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: /NVA/AppConfig/ApplicationEnvironmentName
-      Type: String
-      Value: !Ref ApplicationEnvironment
 
 
   #============================== Backup plan ==============================
