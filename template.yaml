@@ -70,6 +70,18 @@ Parameters:
     Description: IP range (CIDR notation) for the private subnet
     Type: String
     Default: 10.192.20.0/24
+  AppConfigName:
+    Type: String
+    Description: Name of the AppConfig application
+    Default: ApplicationConfig
+  ApplicationConfigurationProfileName:
+    Type: String
+    Description: Name of the AppConfig application configuration profile
+    Default: ApplicationConfigurationProfile
+  ApplicationEnvironmentName:
+    Type: String
+    Description: Name of the AppConfig application environment
+    Default: Live
 
   # Backup configuration
   DaysToRetainHourlyBackup:
@@ -579,7 +591,89 @@ Resources:
       Value: !GetAtt StaticIpSecurityGroup.GroupId
 
 
+  #============================== ApplicationConfig ========================
+
+  ApplicationConfig:
+    Type: 'AWS::AppConfig::Application'
+    Properties:
+      Description: Application Configuration for whole NVA application
+      Name: !Ref AppConfigName
+
+  ApplicationConfigurationProfile:
+    Type: 'AWS::AppConfig::ConfigurationProfile'
+    Properties:
+      ApplicationId: !Ref ApplicationConfig
+      Description: Application Configuration Profile for ApplicationConfig
+      Name: !Ref ApplicationConfigurationProfileName
+      LocationUri: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ApplicationConfigurationParameter'
+      RetrievalRoleArn: !GetAtt ApplicationConfigRole.Arn
+
+  ApplicationEnvironment:
+    Type: 'AWS::AppConfig::Environment'
+    Properties:
+      ApplicationId: !Ref ApplicationConfig
+      Description: Environment for application configuration
+      Name: !Ref ApplicationEnvironmentName
+
+  ApplicationConfigurationVersion:
+    Type: AWS::AppConfig::HostedConfigurationVersion
+    Properties:
+      ApplicationId: !Ref ApplicationConfig
+      ConfigurationProfileId: !Ref ApplicationConfigurationProfile
+      ContentType: application/json
+      Content: '{}'
+
+  ApplicationConfigRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: appconfig.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ConfigurationProfileSSMPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ApplicationConfigurationParameter'
+
+  ApplicationConfigId:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /NVA/AppConfig/ApplicationConfigId
+      Type: String
+      Value: !Ref ApplicationConfig
+
+  ApplicationConfigName:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /NVA/AppConfig/ApplicationConfigName
+      Type: String
+      Value: !Ref AppConfigName
+
+  ConfigurationProfileNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /NVA/AppConfig/ApplicationConfigProfileName
+      Type: String
+      Value: !Ref ApplicationConfigurationProfileName
+
+  EnvironmentNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /NVA/AppConfig/ApplicationEnvironmentName
+      Type: String
+      Value: !Ref ApplicationEnvironmentName
+
+
   #============================== Backup plan ==============================
+
   NvaBackupPlan:
     Type: AWS::Backup::BackupPlan
     Properties:
