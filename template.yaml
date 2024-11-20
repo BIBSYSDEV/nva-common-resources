@@ -631,6 +631,27 @@ Resources:
                   - ssm:GetParameter
                 Resource: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ApplicationConfigurationParameter'
 
+  ApplicationConfigNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /NVA/AppConfig/ApplicationConfigName
+      Type: String
+      Value: !Ref ApplicationConfig
+
+  ConfigurationProfileNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /NVA/AppConfig/ApplicationConfigProfileName
+      Type: String
+      Value: !Ref ApplicationConfigurationProfile
+
+  EnvironmentNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: /NVA/AppConfig/ApplicationEnvironmentName
+      Type: String
+      Value: !Ref ApplicationEnvironment
+
 
   #============================== Backup plan ==============================
 
@@ -803,15 +824,3 @@ Outputs:
   LambdaVersionCleanupFunction:
     Description: "ARN of the version cleanup Lambda function"
     Value: !GetAtt LambdaVersionCleanupFunction.Arn
-
-  ApplicationConfigName:
-    Description: The name of the AppConfig Application
-    Value: !Ref ApplicationConfig
-
-  ConfigurationProfileName:
-    Description: The name of the AppConfig Configuration Profile
-    Value: !Ref ApplicationConfigurationProfile
-
-  EnvironmentName:
-    Description: The name of the AppConfig Environment
-    Value: !Ref ApplicationEnvironment
