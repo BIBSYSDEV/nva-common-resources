@@ -643,33 +643,33 @@ Resources:
                   - ssm:GetParameter
                 Resource: !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/ApplicationConfigurationParameter'
 
-  ApplicationConfigId:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: /NVA/AppConfig/ApplicationConfigId
-      Type: String
-      Value: !Ref ApplicationConfig
-
-  ApplicationConfigName:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: /NVA/AppConfig/ApplicationConfigName
-      Type: String
-      Value: !Ref AppConfigName
-
-  ConfigurationProfileNameParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: /NVA/AppConfig/ApplicationConfigProfileName
-      Type: String
-      Value: !Ref ApplicationConfigurationProfileName
-
-  EnvironmentNameParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: /NVA/AppConfig/ApplicationEnvironmentName
-      Type: String
-      Value: !Ref ApplicationEnvironmentName
+#  ApplicationConfigId:
+#    Type: AWS::SSM::Parameter
+#    Properties:
+#      Name: /NVA/AppConfig/ApplicationConfigId
+#      Type: String
+#      Value: !Ref ApplicationConfig
+#
+#  ApplicationConfigName:
+#    Type: AWS::SSM::Parameter
+#    Properties:
+#      Name: /NVA/AppConfig/ApplicationConfigName
+#      Type: String
+#      Value: !Ref AppConfigName
+#
+#  ConfigurationProfileNameParameter:
+#    Type: AWS::SSM::Parameter
+#    Properties:
+#      Name: /NVA/AppConfig/ApplicationConfigProfileName
+#      Type: String
+#      Value: !Ref ApplicationConfigurationProfileName
+#
+#  EnvironmentNameParameter:
+#    Type: AWS::SSM::Parameter
+#    Properties:
+#      Name: /NVA/AppConfig/ApplicationEnvironmentName
+#      Type: String
+#      Value: !Ref ApplicationEnvironmentName
 
 
   #============================== Backup plan ==============================
