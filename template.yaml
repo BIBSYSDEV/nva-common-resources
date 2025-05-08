@@ -711,7 +711,7 @@ Resources:
             ScheduleExpression: 'cron(0 22 * * ? *)' # Every day at 22:00
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
-            EnableContinuousBackup: true
+            EnableContinuousBackup: false # A resource can only have one continuous backup
             Lifecycle:
               DeleteAfterDays: !Ref DaysToRetainDailyBackup
             RecoveryPointTags:
@@ -726,7 +726,7 @@ Resources:
             ScheduleExpression: 'cron(0 12 ? * 1 *)' # Every Sunday at 12:00
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
-            EnableContinuousBackup: false # PITR limits retention to 35 days
+            EnableContinuousBackup: false # A resource can only have one continuous backup
             Lifecycle:
               DeleteAfterDays: !Ref DaysToRetainWeeklyBackup
             RecoveryPointTags:
@@ -741,7 +741,7 @@ Resources:
             ScheduleExpression: 'cron(0 0 1 1,4,7,10 ? *)' # At start of every quarter
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
-            EnableContinuousBackup: false # PITR limits retention to 35 days
+            EnableContinuousBackup: false # A resource can only have one continuous backup
             Lifecycle:
               DeleteAfterDays: !Ref DaysToRetainQuarterlyBackup
             RecoveryPointTags:
