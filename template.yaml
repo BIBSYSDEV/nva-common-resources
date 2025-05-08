@@ -15,6 +15,7 @@ Metadata:
           - DaysToRetainQuarterlyBackup
           - SharedBackupVaultArn
           - SharedBackupAccountId
+          - S3NoncurrentVersionExpirationDays
           - UseBackup
 
 
@@ -106,6 +107,10 @@ Parameters:
   SharedBackupAccountId:
     Type: String
     Description: Account ID of the shared backup account
+  S3NoncurrentVersionExpirationDays:
+    Type: Number
+    Default: 60
+    Description: Number of days to retain non-current object versions in versioned S3 buckets
   UseBackup:
     Type: String
     Default: 'false'
@@ -237,7 +242,6 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
     Properties:
-
       BucketName: !If
         - WithSuffix
         - !Sub 'nva-resource-storage-${AWS::AccountId}-${Suffix}'
@@ -254,6 +258,13 @@ Resources:
             Status: Enabled
             AbortIncompleteMultipartUpload:
               DaysAfterInitiation: 7
+          - Id: ExpireOldObjectVersions
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: !Ref S3NoncurrentVersionExpirationDays
+      Tags:
+        - Key: IncludedInBackup
+          Value: "true"
       VersioningConfiguration:
         Status: Enabled
 
