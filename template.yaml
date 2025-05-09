@@ -87,7 +87,7 @@ Parameters:
   # Backup configuration
   DaysToRetainHourlyBackup:
     Type: Number
-    Default: 7
+    Default: 14
     Description: Number of days to retain hourly backups
   DaysToRetainDailyBackup:
     Type: Number
