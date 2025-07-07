@@ -308,6 +308,17 @@ Resources:
 
   CristinImportNviQueue:
     Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeoutSeconds: 300  # 5 minutes
+      MessageRetentionPeriod: 1209600  # 14 days
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt CristinImportNviQueueDLQ.Arn
+        maxReceiveCount: 3
+
+  CristinImportNviQueueDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 1209600  # 14 days
 
   VPC:
     Type: AWS::EC2::VPC
