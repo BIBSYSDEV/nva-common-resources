@@ -308,6 +308,37 @@ Resources:
 
   CristinImportNviQueue:
     Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 300 # 5 minutes
+      MessageRetentionPeriod: 1209600 # 14 days
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt CristinImportNviQueueDLQ.Arn
+        maxReceiveCount: 3
+
+  CristinImportNviQueueDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 1209600 # 14 days
+
+  CristinImportNviQueueDLQAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: NVI - Processing Cristin import event failed
+      AlarmDescription: >
+        Check messages on CristinImportNviQueueDLQ. This indicates that 
+        `nva-nvi` has failed to process imported Cristin results.
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      Statistic: Sum
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt CristinImportNviQueueDLQ.QueueName
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      AlarmActions:
+        - !Ref SlackSNSTopic
 
   VPC:
     Type: AWS::EC2::VPC
