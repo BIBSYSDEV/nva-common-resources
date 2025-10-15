@@ -15,6 +15,7 @@ Metadata:
           - DaysToRetainQuarterlyBackup
           - SharedBackupVaultArn
           - SharedBackupAccountId
+          - S3NoncurrentVersionExpirationDays
           - UseBackup
 
 
@@ -86,15 +87,15 @@ Parameters:
   # Backup configuration
   DaysToRetainHourlyBackup:
     Type: Number
-    Default: 2
+    Default: 14
     Description: Number of days to retain hourly backups
   DaysToRetainDailyBackup:
     Type: Number
-    Default: 7
+    Default: 14
     Description: Number of days to retain daily backups
   DaysToRetainWeeklyBackup:
     Type: Number
-    Default: 28
+    Default: 90
     Description: Number of days to retain weekly backups
   DaysToRetainQuarterlyBackup:
     Type: Number
@@ -106,6 +107,10 @@ Parameters:
   SharedBackupAccountId:
     Type: String
     Description: Account ID of the shared backup account
+  S3NoncurrentVersionExpirationDays:
+    Type: Number
+    Default: 60
+    Description: Number of days to retain non-current object versions in versioned S3 buckets
   UseBackup:
     Type: String
     Default: 'false'
@@ -267,7 +272,6 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
     Properties:
-
       BucketName: !If
         - WithSuffix
         - !Sub 'nva-resource-storage-${AWS::AccountId}-${Suffix}'
@@ -284,6 +288,13 @@ Resources:
             Status: Enabled
             AbortIncompleteMultipartUpload:
               DaysAfterInitiation: 7
+          - Id: ExpireOldObjectVersions
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: !Ref S3NoncurrentVersionExpirationDays
+      Tags:
+        - Key: IncludedInBackup
+          Value: "true"
       VersioningConfiguration:
         Status: Enabled
 
@@ -327,6 +338,37 @@ Resources:
 
   CristinImportNviQueue:
     Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 300 # 5 minutes
+      MessageRetentionPeriod: 1209600 # 14 days
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt CristinImportNviQueueDLQ.Arn
+        maxReceiveCount: 3
+
+  CristinImportNviQueueDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 1209600 # 14 days
+
+  CristinImportNviQueueDLQAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: NVI - Processing Cristin import event failed
+      AlarmDescription: >
+        Check messages on CristinImportNviQueueDLQ. This indicates that 
+        `nva-nvi` has failed to process imported Cristin results.
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      Statistic: Sum
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt CristinImportNviQueueDLQ.QueueName
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      AlarmActions:
+        - !Ref SlackSNSTopic
 
   VPC:
     Type: AWS::EC2::VPC
@@ -730,7 +772,7 @@ Resources:
             ScheduleExpression: 'cron(0 22 * * ? *)' # Every day at 22:00
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
-            EnableContinuousBackup: true
+            EnableContinuousBackup: false # A resource can only have one continuous backup
             Lifecycle:
               DeleteAfterDays: !Ref DaysToRetainDailyBackup
             RecoveryPointTags:
@@ -745,7 +787,7 @@ Resources:
             ScheduleExpression: 'cron(0 12 ? * 1 *)' # Every Sunday at 12:00
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
-            EnableContinuousBackup: false # PITR limits retention to 35 days
+            EnableContinuousBackup: false # A resource can only have one continuous backup
             Lifecycle:
               DeleteAfterDays: !Ref DaysToRetainWeeklyBackup
             RecoveryPointTags:
@@ -760,7 +802,7 @@ Resources:
             ScheduleExpression: 'cron(0 0 1 1,4,7,10 ? *)' # At start of every quarter
             StartWindowMinutes: 60
             CompletionWindowMinutes: 120
-            EnableContinuousBackup: false # PITR limits retention to 35 days
+            EnableContinuousBackup: false # A resource can only have one continuous backup
             Lifecycle:
               DeleteAfterDays: !Ref DaysToRetainQuarterlyBackup
             RecoveryPointTags:
