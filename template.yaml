@@ -186,6 +186,36 @@ Resources:
   SlackSNSTopic:
     Type: AWS::SNS::Topic
 
+  SlackSNSTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref SlackSNSTopic
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCostAnomalyDetectionPublish
+            Effect: Allow
+            Principal:
+              Service: costalerts.amazonaws.com
+            Action:
+              - SNS:Publish
+            Resource: !Ref SlackSNSTopic
+          - Sid: AllowAWSBudgetsPublish
+            Effect: Allow
+            Principal:
+              Service: budgets.amazonaws.com
+            Action:
+              - SNS:Publish
+            Resource: !Ref SlackSNSTopic
+          - Sid: AllowCloudWatchAlarmsPublish
+            Effect: Allow
+            Principal:
+              Service: cloudwatch.amazonaws.com
+            Action:
+              - SNS:Publish
+            Resource: !Ref SlackSNSTopic
+
   NvaSlackChannel:
     Type: AWS::Chatbot::SlackChannelConfiguration
     Properties:
