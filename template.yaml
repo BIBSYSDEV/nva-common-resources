@@ -156,12 +156,21 @@ Resources:
 
   EventsBucket:
     Type: AWS::S3::Bucket
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - W3045
     Properties:
       BucketName: !If
         - WithSuffix
         - !Sub 'eventbridge-event-bodies-${AWS::AccountId}-${Suffix}'
         - !Sub 'eventbridge-event-bodies-${AWS::AccountId}'
+      # FIXME: Remove AccessControl and OwnershipControls in follow-up PR
       AccessControl: Private
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
       LifecycleConfiguration:
         Rules:
           - Id: "ExpiryPolicy"
@@ -169,6 +178,23 @@ Resources:
             Status: Enabled
       VersioningConfiguration:
         Status: Suspended
+
+  EventsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref EventsBucket
+      PolicyDocument:
+        Statement:
+          - Sid: DenyPublicAccess
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+              - !Sub 'arn:aws:s3:::${EventsBucket}'
+              - !Sub 'arn:aws:s3:::${EventsBucket}/*'
+            Condition:
+              Bool:
+                'aws:SecureTransport': 'false'
 
   ChatbotRole:
     Type: "AWS::IAM::Role"
@@ -239,6 +265,11 @@ Resources:
   # the NVA Resources service stack should not necessarily break the NVA search service
   ExpandedResourcesBucket:
     Type: AWS::S3::Bucket
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - W3045
     Properties:
       BucketName: !If
         - WithSuffix
@@ -249,28 +280,77 @@ Resources:
           "EventBridgeEnabled": true
         }
       }
+      # FIXME: Remove AccessControl and OwnershipControls in follow-up PR
       AccessControl: Private
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
       VersioningConfiguration:
         Status: Suspended
+
+  ExpandedResourcesBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ExpandedResourcesBucket
+      PolicyDocument:
+        Statement:
+          - Sid: DenyPublicAccess
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+              - !Sub 'arn:aws:s3:::${ExpandedResourcesBucket}'
+              - !Sub 'arn:aws:s3:::${ExpandedResourcesBucket}/*'
+            Condition:
+              Bool:
+                'aws:SecureTransport': 'false'
 
   # Bucket for storing API responses that are too large to pass through Lambda
   LargeApiResponsesBucket:
     Type: AWS::S3::Bucket
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - W3045
     Properties:
       BucketName: !If
         - WithSuffix
         - !Sub 'large-api-responses-${AWS::AccountId}-${Suffix}'
         - !Sub 'large-api-responses-${AWS::AccountId}'
+      # FIXME: Remove AccessControl and OwnershipControls in follow-up PR
       AccessControl: Private
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
       LifecycleConfiguration:
         Rules:
           - Status: Enabled
             ExpirationInDays: 1
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+
+  LargeApiResponsesBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref LargeApiResponsesBucket
+      PolicyDocument:
+        Statement:
+          - Sid: DenyPublicAccess
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+              - !Sub 'arn:aws:s3:::${LargeApiResponsesBucket}'
+              - !Sub 'arn:aws:s3:::${LargeApiResponsesBucket}/*'
+            Condition:
+              Bool:
+                'aws:SecureTransport': 'false'
 
   ResourceStorageBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       BucketName: !If
         - WithSuffix
@@ -321,11 +401,38 @@ Resources:
   NvaAthenaQueriesBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Metadata:
+      cfn-lint:
+        config:
+          ignore_checks:
+            - W3045
     Properties:
       BucketName: !Sub 'nva-athena-queries-${AWS::AccountId}'
+      # FIXME: Remove AccessControl and OwnershipControls in follow-up PR
       AccessControl: Private
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
       VersioningConfiguration:
         Status: Suspended
+
+  NvaAthenaQueriesBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref NvaAthenaQueriesBucket
+      PolicyDocument:
+        Statement:
+          - Sid: DenyPublicAccess
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+              - !Sub 'arn:aws:s3:::${NvaAthenaQueriesBucket}'
+              - !Sub 'arn:aws:s3:::${NvaAthenaQueriesBucket}/*'
+            Condition:
+              Bool:
+                'aws:SecureTransport': 'false'
 
   BackendDomainName:
     Type: AWS::ApiGateway::DomainName
