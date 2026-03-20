@@ -156,21 +156,14 @@ Resources:
 
   EventsBucket:
     Type: AWS::S3::Bucket
-    Metadata:
-      cfn-lint:
-        config:
-          ignore_checks:
-            - W3045
     Properties:
       BucketName: !If
         - WithSuffix
         - !Sub 'eventbridge-event-bodies-${AWS::AccountId}-${Suffix}'
         - !Sub 'eventbridge-event-bodies-${AWS::AccountId}'
-      # FIXME: Remove AccessControl and OwnershipControls in follow-up PR
-      AccessControl: Private
       OwnershipControls:
         Rules:
-          - ObjectOwnership: BucketOwnerPreferred
+          - ObjectOwnership: BucketOwnerEnforced
       LifecycleConfiguration:
         Rules:
           - Id: "ExpiryPolicy"
@@ -265,11 +258,6 @@ Resources:
   # the NVA Resources service stack should not necessarily break the NVA search service
   ExpandedResourcesBucket:
     Type: AWS::S3::Bucket
-    Metadata:
-      cfn-lint:
-        config:
-          ignore_checks:
-            - W3045
     Properties:
       BucketName: !If
         - WithSuffix
@@ -280,11 +268,9 @@ Resources:
           "EventBridgeEnabled": true
         }
       }
-      # FIXME: Remove AccessControl and OwnershipControls in follow-up PR
-      AccessControl: Private
       OwnershipControls:
         Rules:
-          - ObjectOwnership: BucketOwnerPreferred
+          - ObjectOwnership: BucketOwnerEnforced
       VersioningConfiguration:
         Status: Suspended
 
@@ -308,21 +294,14 @@ Resources:
   # Bucket for storing API responses that are too large to pass through Lambda
   LargeApiResponsesBucket:
     Type: AWS::S3::Bucket
-    Metadata:
-      cfn-lint:
-        config:
-          ignore_checks:
-            - W3045
     Properties:
       BucketName: !If
         - WithSuffix
         - !Sub 'large-api-responses-${AWS::AccountId}-${Suffix}'
         - !Sub 'large-api-responses-${AWS::AccountId}'
-      # FIXME: Remove AccessControl and OwnershipControls in follow-up PR
-      AccessControl: Private
       OwnershipControls:
         Rules:
-          - ObjectOwnership: BucketOwnerPreferred
+          - ObjectOwnership: BucketOwnerEnforced
       LifecycleConfiguration:
         Rules:
           - Status: Enabled
@@ -402,18 +381,11 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
-    Metadata:
-      cfn-lint:
-        config:
-          ignore_checks:
-            - W3045
     Properties:
       BucketName: !Sub 'nva-athena-queries-${AWS::AccountId}'
-      # FIXME: Remove AccessControl and OwnershipControls in follow-up PR
-      AccessControl: Private
       OwnershipControls:
         Rules:
-          - ObjectOwnership: BucketOwnerPreferred
+          - ObjectOwnership: BucketOwnerEnforced
       VersioningConfiguration:
         Status: Suspended
 
