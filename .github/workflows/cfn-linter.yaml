@@ -1,6 +1,14 @@
 name: Lint CloudFormation Templates
+permissions:
+  contents: write # To submit dependency graph
+  checks: write # To publish test results
+  pull-requests: write # To comment on PRs
 
-on: [push]
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, reopened, synchronize]
 
 jobs:
   cloudformation-linter:
@@ -9,13 +17,13 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
-
-    - name: cfn-lint
-      uses: scottbrenner/cfn-lint-action@main
-      with:
-        entrypoint: /bin/sh
-        args: "-c \"cat template.yaml | sed '/CODEBUILD_RESOLVED_SOURCE_VERSION/d' | cfn-lint -\""
+      uses: actions/checkout@v4
+    - name: Setup CloudFormation Linter
+      uses: scottbrenner/cfn-lint-action@9636da81fb2e0cef75725d8dda11b0148940b7ae #v2.6.0
+    - name: Print the Cloud Formation Linter Version & run Linter.
+      run: |
+        cfn-lint --version
+        cfn-lint -t ./template.yaml
 
     - name: Cloud formation security checks
       uses: stelligent/cfn_nag@master
