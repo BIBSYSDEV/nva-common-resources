@@ -243,6 +243,16 @@ Resources:
             Action:
               - SNS:Publish
             Resource: !Ref SlackSNSTopic
+          - Sid: AllowEventBridgePublish
+            Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action:
+              - SNS:Publish
+            Resource: !Ref SlackSNSTopic
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
 
   NvaSlackChannel:
     Type: AWS::Chatbot::SlackChannelConfiguration
