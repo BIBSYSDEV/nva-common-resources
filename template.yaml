@@ -430,6 +430,7 @@ Resources:
       EndpointConfiguration:
         Types:
           - !Ref ApiGatewayEndpointType
+        IpAddressType: 'dualstack'
 
   CristinImportNviQueue:
     Type: AWS::SQS::Queue
