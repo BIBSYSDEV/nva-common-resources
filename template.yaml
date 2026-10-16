@@ -127,11 +127,11 @@ Mappings:
   CloudFrontManagedPolicies:
     CachePolicy:
       CachingOptimized: 658327ea-f89d-4fab-a63d-7e88639e58f6
-    ResponseHeadersPolicy:
-      SecurityHeaders: 67f7725c-6f97-4210-82d7-5512b31e9d03
   StaticHtml:
     ErrorResponse:
       CachingMinimumTtlSeconds: 60
+    SecurityHeaders:
+      StrictTransportSecurityMaxAgeSeconds: 31536000
 
 Conditions:
   WithSuffix: !Not [ !Equals [ !Ref Suffix, '' ] ]
@@ -577,8 +577,9 @@ Resources:
 
   #============================== Static HTML hosting ======================
 
-  # Public HTML files served over HTTPS via CloudFront. The bucket is private;
-  # only the distribution below can read it, so the S3 URL is never exposed.
+  # HTML files served over HTTPS via CloudFront to anyone who has the URL; there
+  # is no authentication. The bucket itself is reachable only through the
+  # distribution below, so the S3 URL is never exposed.
   # The bucket holds the data and is retained; the distribution and its helpers
   # are disposable. A stable public URL comes from StaticHtmlDomainName.
   StaticHtmlBucket:
@@ -653,8 +654,9 @@ Resources:
 
   # Serves directory-style URLs the way S3 website hosting does:
   #   /dir/      -> /dir/index.html (rewritten in place)
-  #   /dir       -> 301 to /dir/ so relative links inside the page resolve correctly
+  #   /dir       -> 308 to https://<host>/dir/ so relative links inside the page resolve correctly
   #   /file.html -> unchanged
+  # Objects without a file extension cannot be served; see README.
   StaticHtmlIndexRewriteFunction:
     Type: AWS::CloudFront::Function
     Properties:
@@ -673,8 +675,10 @@ Resources:
         const PATH_SEPARATOR = '/';
         const EXTENSION_SEPARATOR = '.';
         const QUERY_SEPARATOR = '?';
-        const MOVED_PERMANENTLY = 301;
-        const KEEP_VALUE_AS_IS = (value) => value;
+        const PARAMETER_SEPARATOR = '&';
+        const KEY_VALUE_SEPARATOR = '=';
+        const HTTPS_SCHEME = 'https://';
+        const PERMANENT_REDIRECT = 308;
 
         function handler(event) {
           const request = event.request;
@@ -686,7 +690,7 @@ Resources:
           if (lastSegmentHasExtension(uri)) {
             return request;
           }
-          return redirectToDirectory(uri, request.querystring);
+          return redirectToDirectory(request.headers.host.value, uri, request.querystring);
         }
 
         function lastSegmentHasExtension(uri) {
@@ -694,12 +698,13 @@ Resources:
           return lastSegment.includes(EXTENSION_SEPARATOR);
         }
 
-        function redirectToDirectory(uri, requestQuerystring) {
+        function redirectToDirectory(host, uri, requestQuerystring) {
+          const location = HTTPS_SCHEME + host + uri + PATH_SEPARATOR + formatQuerystring(requestQuerystring);
           return {
-            statusCode: MOVED_PERMANENTLY,
-            statusDescription: 'Moved Permanently',
+            statusCode: PERMANENT_REDIRECT,
+            statusDescription: 'Permanent Redirect',
             headers: {
-              location: { value: uri + PATH_SEPARATOR + formatQuerystring(requestQuerystring) }
+              location: { value: location }
             }
           };
         }
@@ -709,7 +714,7 @@ Resources:
           Object.keys(requestQuerystring).forEach((name) => {
             parameters[name] = valuesOf(requestQuerystring[name]);
           });
-          const formatted = querystring.stringify(parameters, '&', '=', { encodeURIComponent: KEEP_VALUE_AS_IS });
+          const formatted = querystring.stringify(parameters, PARAMETER_SEPARATOR, KEY_VALUE_SEPARATOR, { encodeURIComponent: percentEncode });
           return formatted === '' ? '' : QUERY_SEPARATOR + formatted;
         }
 
@@ -719,6 +724,52 @@ Resources:
           }
           return parameter.value;
         }
+
+        function percentEncode(text) {
+          return encodeURIComponent(decodeIfPercentEncoded(text));
+        }
+
+        function decodeIfPercentEncoded(text) {
+          try {
+            return decodeURIComponent(text);
+          } catch (malformedPercentEscape) {
+            return text;
+          }
+        }
+
+  # The NVA frontend may embed the content in an iframe and fetch it cross-origin,
+  # so framing and CORS are allowed for the frontend origin only.
+  StaticHtmlResponseHeadersPolicy:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !If
+          - WithSuffix
+          - !Sub 'nva-static-html-headers-${Suffix}'
+          - 'nva-static-html-headers'
+        Comment: Security headers that let the NVA frontend frame and fetch static HTML
+        CorsConfig:
+          AccessControlAllowCredentials: false
+          AccessControlAllowHeaders:
+            Items: [ '*' ]
+          AccessControlAllowMethods:
+            Items: [ GET, HEAD ]
+          AccessControlAllowOrigins:
+            Items: [ !Sub 'https://${CustomDomain}' ]
+          OriginOverride: true
+        SecurityHeadersConfig:
+          ContentSecurityPolicy:
+            ContentSecurityPolicy: !Sub "frame-ancestors 'self' https://${CustomDomain}"
+            Override: true
+          ContentTypeOptions:
+            Override: true
+          ReferrerPolicy:
+            ReferrerPolicy: strict-origin-when-cross-origin
+            Override: true
+          StrictTransportSecurity:
+            AccessControlMaxAgeSec: !FindInMap [ StaticHtml, SecurityHeaders, StrictTransportSecurityMaxAgeSeconds ]
+            IncludeSubdomains: false
+            Override: true
 
   StaticHtmlDistribution:
     Type: AWS::CloudFront::Distribution
@@ -749,7 +800,7 @@ Resources:
           CachedMethods: [ GET, HEAD ]
           Compress: true
           CachePolicyId: !FindInMap [ CloudFrontManagedPolicies, CachePolicy, CachingOptimized ]
-          ResponseHeadersPolicyId: !FindInMap [ CloudFrontManagedPolicies, ResponseHeadersPolicy, SecurityHeaders ]
+          ResponseHeadersPolicyId: !Ref StaticHtmlResponseHeadersPolicy
           FunctionAssociations:
             - EventType: viewer-request
               FunctionARN: !GetAtt StaticHtmlIndexRewriteFunction.FunctionARN
