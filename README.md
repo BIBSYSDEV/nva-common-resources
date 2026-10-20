@@ -37,8 +37,8 @@ Conventions the distribution relies on:
   the content, or viewers see the raw S3 error body.
 - Objects are served with the `Content-Type` S3 assigned at upload, which it
   derives from the extension. Set it explicitly for unusual extensions.
-- The NVA frontend at `https://<CustomDomain>` may embed pages in an iframe and
-  fetch them cross-origin. Other origins can only navigate to the pages.
+- The NVA frontend at `https://<ApplicationDomain>` (SSM `/NVA/ApplicationDomain`)
+  may embed pages in an iframe and fetch them cross-origin. Other origins can only navigate to the pages.
 
 Set the `StaticHtmlDomainName` parameter to serve from a branded hostname with
 TLS 1.2 instead of the `*.cloudfront.net` hostname. The hostname must be covered

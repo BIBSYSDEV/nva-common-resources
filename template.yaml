@@ -28,7 +28,11 @@ Parameters:
     Description: ARN for the certificate covering the API host/domain/API Gateway Custom Domain. The value is stored in Region us-east-1.
   CustomDomain:
     Type: String
-    Description: The domain of the NVA related services. This part of the domain is common to both backend and frontend services. Eg. dev.nva.aws.unit.no or nva.unit.no.
+    Description: Base domain of the NVA backend services; the API is served at api.<CustomDomain>. Eg. dev.nva.aws.unit.no.
+  ApplicationDomain:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /NVA/ApplicationDomain
+    Description: Domain-name for the frontend
   StaticHtmlDomainName:
     Type: String
     Default: ''
@@ -755,11 +759,11 @@ Resources:
           AccessControlAllowMethods:
             Items: [ GET, HEAD ]
           AccessControlAllowOrigins:
-            Items: [ !Sub 'https://${CustomDomain}' ]
+            Items: [ !Sub 'https://${ApplicationDomain}' ]
           OriginOverride: true
         SecurityHeadersConfig:
           ContentSecurityPolicy:
-            ContentSecurityPolicy: !Sub "frame-ancestors 'self' https://${CustomDomain}"
+            ContentSecurityPolicy: !Sub "frame-ancestors 'self' https://${ApplicationDomain}"
             Override: true
           ContentTypeOptions:
             Override: true
