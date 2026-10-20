@@ -800,7 +800,7 @@ Resources:
         DefaultCacheBehavior:
           TargetOriginId: StaticHtmlS3Origin
           ViewerProtocolPolicy: redirect-to-https
-          AllowedMethods: [ GET, HEAD ]
+          AllowedMethods: [ GET, HEAD, OPTIONS ]
           CachedMethods: [ GET, HEAD ]
           Compress: true
           CachePolicyId: !FindInMap [ CloudFrontManagedPolicies, CachePolicy, CachingOptimized ]
