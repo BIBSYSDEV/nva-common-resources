@@ -28,7 +28,15 @@ Parameters:
     Description: ARN for the certificate covering the API host/domain/API Gateway Custom Domain. The value is stored in Region us-east-1.
   CustomDomain:
     Type: String
-    Description: The domain of the NVA related services. This part of the domain is common to both backend and frontend services. Eg. dev.nva.aws.unit.no or nva.unit.no.
+    Description: Base domain of the NVA backend services; the API is served at api.<CustomDomain>. Eg. dev.nva.aws.unit.no.
+  ApplicationDomain:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /NVA/ApplicationDomain
+    Description: Domain-name for the frontend
+  StaticHtmlDomainName:
+    Type: String
+    Default: ''
+    Description: Optional public hostname for the static HTML distribution, e.g. static.dev.nva.aws.unit.no. Must be covered by FrontendDomainCertificateArn and have a DNS alias pointing at the distribution. Leave empty to serve from the *.cloudfront.net hostname.
   AlmaApiUri:
     Type: String
     Description: URI to Alma API.
@@ -119,8 +127,19 @@ Parameters:
       - 'false'
     Description: Enable or disable backups for this environment
 
+Mappings:
+  CloudFrontManagedPolicies:
+    CachePolicy:
+      CachingOptimized: 658327ea-f89d-4fab-a63d-7e88639e58f6
+  StaticHtml:
+    ErrorResponse:
+      CachingMinimumTtlSeconds: 60
+    SecurityHeaders:
+      StrictTransportSecurityMaxAgeSeconds: 31536000
+
 Conditions:
   WithSuffix: !Not [ !Equals [ !Ref Suffix, '' ] ]
+  WithStaticHtmlDomainName: !Not [ !Equals [ !Ref StaticHtmlDomainName, '' ] ]
   CreateBackups:
     Fn::Equals:
       - !Ref UseBackup
@@ -560,6 +579,248 @@ Resources:
       GroupDescription: "Security group with no ingress rule for static IP"
       VpcId: !Ref VPC
 
+  #============================== Static HTML hosting ======================
+
+  # HTML files served over HTTPS via CloudFront to anyone who has the URL; there
+  # is no authentication. The bucket itself is reachable only through the
+  # distribution below, so the S3 URL is never exposed.
+  # The bucket holds the data and is retained; the distribution and its helpers
+  # are disposable. A stable public URL comes from StaticHtmlDomainName.
+  StaticHtmlBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !If
+        - WithSuffix
+        - !Sub 'nva-static-html-${AWS::AccountId}-${Suffix}'
+        - !Sub 'nva-static-html-${AWS::AccountId}'
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      VersioningConfiguration:
+        Status: Suspended
+
+  StaticHtmlBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref StaticHtmlBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          # ListBucket lets S3 answer 404 (not 403) for missing keys, so genuine
+          # authorization failures stay visible as 403.
+          - Sid: AllowCloudFrontRead
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action:
+              - s3:GetObject
+              - s3:ListBucket
+            Resource:
+              - !Sub 'arn:aws:s3:::${StaticHtmlBucket}'
+              - !Sub 'arn:aws:s3:::${StaticHtmlBucket}/*'
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${StaticHtmlDistribution}'
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+              - !Sub 'arn:aws:s3:::${StaticHtmlBucket}'
+              - !Sub 'arn:aws:s3:::${StaticHtmlBucket}/*'
+            Condition:
+              Bool:
+                'aws:SecureTransport': 'false'
+
+  StaticHtmlOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !If
+          - WithSuffix
+          - !Sub 'nva-static-html-oac-${Suffix}'
+          - 'nva-static-html-oac'
+        Description: Signs CloudFront requests to the static HTML bucket
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  # Serves directory-style URLs the way S3 website hosting does:
+  #   /dir/      -> /dir/index.html (rewritten in place)
+  #   /dir       -> 308 to https://<host>/dir/ so relative links inside the page resolve correctly
+  #   /file.html -> unchanged
+  # Objects without a file extension cannot be served; see README.
+  StaticHtmlIndexRewriteFunction:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: !If
+        - WithSuffix
+        - !Sub 'nva-static-html-index-rewrite-${Suffix}'
+        - 'nva-static-html-index-rewrite'
+      AutoPublish: true
+      FunctionConfig:
+        Comment: Serve index.html for directory requests
+        Runtime: cloudfront-js-2.0
+      FunctionCode: |
+        const querystring = require('querystring');
+
+        const INDEX_DOCUMENT = 'index.html';
+        const PATH_SEPARATOR = '/';
+        const EXTENSION_SEPARATOR = '.';
+        const QUERY_SEPARATOR = '?';
+        const PARAMETER_SEPARATOR = '&';
+        const KEY_VALUE_SEPARATOR = '=';
+        const HTTPS_SCHEME = 'https://';
+        const PERMANENT_REDIRECT = 308;
+
+        function handler(event) {
+          const request = event.request;
+          const uri = request.uri;
+          if (uri.endsWith(PATH_SEPARATOR)) {
+            request.uri = uri + INDEX_DOCUMENT;
+            return request;
+          }
+          if (lastSegmentHasExtension(uri)) {
+            return request;
+          }
+          return redirectToDirectory(request.headers.host.value, uri, request.querystring);
+        }
+
+        function lastSegmentHasExtension(uri) {
+          const lastSegment = uri.substring(uri.lastIndexOf(PATH_SEPARATOR) + 1);
+          return lastSegment.includes(EXTENSION_SEPARATOR);
+        }
+
+        function redirectToDirectory(host, uri, requestQuerystring) {
+          const location = HTTPS_SCHEME + host + uri + PATH_SEPARATOR + formatQuerystring(requestQuerystring);
+          return {
+            statusCode: PERMANENT_REDIRECT,
+            statusDescription: 'Permanent Redirect',
+            headers: {
+              location: { value: location }
+            }
+          };
+        }
+
+        function formatQuerystring(requestQuerystring) {
+          const parameters = {};
+          Object.keys(requestQuerystring).forEach((name) => {
+            parameters[name] = valuesOf(requestQuerystring[name]);
+          });
+          const formatted = querystring.stringify(parameters, PARAMETER_SEPARATOR, KEY_VALUE_SEPARATOR, { encodeURIComponent: percentEncode });
+          return formatted === '' ? '' : QUERY_SEPARATOR + formatted;
+        }
+
+        function valuesOf(parameter) {
+          if (parameter.multiValue) {
+            return parameter.multiValue.map((entry) => entry.value);
+          }
+          return parameter.value;
+        }
+
+        function percentEncode(text) {
+          return encodeURIComponent(decodeIfPercentEncoded(text));
+        }
+
+        function decodeIfPercentEncoded(text) {
+          try {
+            return decodeURIComponent(text);
+          } catch (malformedPercentEscape) {
+            return text;
+          }
+        }
+
+  # The NVA frontend may embed the content in an iframe and fetch it cross-origin,
+  # so framing and CORS are allowed for the frontend origin only.
+  StaticHtmlResponseHeadersPolicy:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !If
+          - WithSuffix
+          - !Sub 'nva-static-html-headers-${Suffix}'
+          - 'nva-static-html-headers'
+        Comment: Security headers that let the NVA frontend frame and fetch static HTML
+        CorsConfig:
+          AccessControlAllowCredentials: false
+          AccessControlAllowHeaders:
+            Items: [ '*' ]
+          AccessControlAllowMethods:
+            Items: [ GET, HEAD ]
+          AccessControlAllowOrigins:
+            Items: [ !Sub 'https://${ApplicationDomain}' ]
+          OriginOverride: true
+        SecurityHeadersConfig:
+          ContentSecurityPolicy:
+            ContentSecurityPolicy: !Sub "frame-ancestors 'self' https://${ApplicationDomain}"
+            Override: true
+          ContentTypeOptions:
+            Override: true
+          ReferrerPolicy:
+            ReferrerPolicy: strict-origin-when-cross-origin
+            Override: true
+          StrictTransportSecurity:
+            AccessControlMaxAgeSec: !FindInMap [ StaticHtml, SecurityHeaders, StrictTransportSecurityMaxAgeSeconds ]
+            IncludeSubdomains: false
+            Override: true
+
+  StaticHtmlDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: !If
+          - WithSuffix
+          - !Sub 'NVA static HTML (${Suffix})'
+          - 'NVA static HTML'
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        PriceClass: PriceClass_100
+        Aliases: !If
+          - WithStaticHtmlDomainName
+          - [ !Ref StaticHtmlDomainName ]
+          - !Ref AWS::NoValue
+        Origins:
+          - Id: StaticHtmlS3Origin
+            DomainName: !GetAtt StaticHtmlBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt StaticHtmlOriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+        DefaultCacheBehavior:
+          TargetOriginId: StaticHtmlS3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [ GET, HEAD, OPTIONS ]
+          CachedMethods: [ GET, HEAD ]
+          Compress: true
+          CachePolicyId: !FindInMap [ CloudFrontManagedPolicies, CachePolicy, CachingOptimized ]
+          ResponseHeadersPolicyId: !Ref StaticHtmlResponseHeadersPolicy
+          FunctionAssociations:
+            - EventType: viewer-request
+              FunctionARN: !GetAtt StaticHtmlIndexRewriteFunction.FunctionARN
+        CustomErrorResponses:
+          # /404.html must be uploaded to the bucket alongside the content (see README).
+          - ErrorCode: 404
+            ResponseCode: 404
+            ResponsePagePath: /404.html
+            ErrorCachingMinTTL: !FindInMap [ StaticHtml, ErrorResponse, CachingMinimumTtlSeconds ]
+        ViewerCertificate: !If
+          - WithStaticHtmlDomainName
+          - AcmCertificateArn: !Ref FrontendDomainCertificateArn
+            SslSupportMethod: sni-only
+            MinimumProtocolVersion: TLSv1.2_2021
+          - CloudFrontDefaultCertificate: true
+
   #================================= Parameters ============================================================
 
   EventsBucketName:
@@ -758,6 +1019,37 @@ Resources:
       Name: "/NVA/EIP/SecurityGroup/GroupId"
       Type: String
       Value: !GetAtt StaticIpSecurityGroup.GroupId
+
+
+  StaticHtmlBucketNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: Parameter containing the bucket name of StaticHtmlBucket. Upload HTML files here; they are served via CloudFront.
+      Name: /NVA/StaticHtml/BucketName
+      Type: String
+      Value: !Ref StaticHtmlBucket
+
+  StaticHtmlDistributionIdParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: CloudFront distribution ID serving the static HTML files. Use for cache invalidations after updating files.
+      Name: /NVA/StaticHtml/DistributionId
+      Type: String
+      Value: !Ref StaticHtmlDistribution
+
+  StaticHtmlPublicDomainNameParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      DataType: text
+      Description: Public hostname serving the static HTML files over HTTPS. Use this when handing out URLs.
+      Name: /NVA/StaticHtml/PublicDomainName
+      Type: String
+      Value: !If
+        - WithStaticHtmlDomainName
+        - !Ref StaticHtmlDomainName
+        - !GetAtt StaticHtmlDistribution.DomainName
 
 
   #============================== ApplicationConfig ========================
@@ -976,12 +1268,12 @@ Resources:
       Role: !GetAtt LambdaVersionCleanupRole.Arn
       CodeUri: .
       Events:
-          ScheduledEvent:
-            Type: Schedule
-            Properties:
-              Description: 'Schedule to trigger deletion of old versions of lambda functions'
-              Schedule: rate(7 days)
-              Name: CleanupLambdaVersionSchedule
+        ScheduledEvent:
+          Type: Schedule
+          Properties:
+            Description: 'Schedule to trigger deletion of old versions of lambda functions'
+            Schedule: rate(7 days)
+            Name: CleanupLambdaVersionSchedule
 
   LambdaVersionCleanupRole:
     Type: AWS::IAM::Role
@@ -1014,3 +1306,15 @@ Outputs:
   LambdaVersionCleanupFunction:
     Description: "ARN of the version cleanup Lambda function"
     Value: !GetAtt LambdaVersionCleanupFunction.Arn
+  StaticHtmlBucketName:
+    Description: "Bucket for static HTML files (aws s3 sync ./html/ s3://<bucket>/)"
+    Value: !Ref StaticHtmlBucket
+  StaticHtmlDistributionId:
+    Description: "CloudFront distribution ID for the static HTML files"
+    Value: !Ref StaticHtmlDistribution
+  StaticHtmlBaseUrl:
+    Description: "Public HTTPS base URL for the static HTML files"
+    Value: !If
+      - WithStaticHtmlDomainName
+      - !Sub 'https://${StaticHtmlDomainName}'
+      - !Sub 'https://${StaticHtmlDistribution.DomainName}'
