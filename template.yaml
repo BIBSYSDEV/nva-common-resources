@@ -579,6 +579,88 @@ Resources:
       GroupDescription: "Security group with no ingress rule for static IP"
       VpcId: !Ref VPC
 
+  # nva-uac's network (nva-uac ADR 0007): private subnets in zones a and b for its database, proxy
+  # and function. Its NAT gateway has a public subnet of its own in zone a, so outbound traffic
+  # stays in a database zone and leaves from an address of its own, not the static IP above.
+  # Never change a zone or a range: a new zone fails the update, while a new range succeeds but
+  # leaves nva-uac's network interfaces in the old subnet with no route out.
+  UacPrivateSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.192.30.0/24
+      AvailabilityZone: !Sub ${AWS::Region}a
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub nva-${EnvironmentName}-uac-private-subnet-a
+  UacPrivateSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.192.31.0/24
+      AvailabilityZone: !Sub ${AWS::Region}b
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub nva-${EnvironmentName}-uac-private-subnet-b
+  UacPublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.192.32.0/24
+      AvailabilityZone: !Sub ${AWS::Region}a
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub nva-${EnvironmentName}-uac-public-subnet
+  UacPublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref UacPublicSubnet
+  UacNatGatewayEIP:
+    Type: AWS::EC2::EIP
+    DeletionPolicy: RetainExceptOnCreate
+    UpdateReplacePolicy: Retain
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub nva-${EnvironmentName}-uac-nat-eip
+  UacNatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt UacNatGatewayEIP.AllocationId
+      SubnetId: !Ref UacPublicSubnet
+      Tags:
+        - Key: Name
+          Value: !Sub nva-${EnvironmentName}-uac-nat
+  UacPrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub nva-${EnvironmentName}-uac-private-routes
+  UacDefaultPrivateRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref UacPrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref UacNatGateway
+  UacPrivateSubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref UacPrivateRouteTable
+      SubnetId: !Ref UacPrivateSubnetA
+  UacPrivateSubnetBRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref UacPrivateRouteTable
+      SubnetId: !Ref UacPrivateSubnetB
+
   #============================== Static HTML hosting ======================
 
   # HTML files served over HTTPS via CloudFront to anyone who has the URL; there
@@ -1019,6 +1101,30 @@ Resources:
       Name: "/NVA/EIP/SecurityGroup/GroupId"
       Type: String
       Value: !GetAtt StaticIpSecurityGroup.GroupId
+
+  UacPrivateSubnetIdsParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: nva-uac's private subnets, in the order of /NVA/EIP/UAC/AvailabilityZones
+      Name: "/NVA/EIP/UAC/PrivateSubnetIds"
+      Type: StringList
+      Value: !Join [",", [!Ref UacPrivateSubnetA, !Ref UacPrivateSubnetB]]
+
+  UacAvailabilityZonesParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: The availability zones of nva-uac's private subnets, in the same order
+      Name: "/NVA/EIP/UAC/AvailabilityZones"
+      Type: StringList
+      Value: !Join [",", [!GetAtt UacPrivateSubnetA.AvailabilityZone, !GetAtt UacPrivateSubnetB.AvailabilityZone]]
+
+  UacNatGatewayEIPParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Description: The outbound address of nva-uac's NAT gateway
+      Name: "/NVA/EIP/UAC/PublicIp"
+      Type: String
+      Value: !GetAtt UacNatGatewayEIP.PublicIp
 
 
   StaticHtmlBucketNameParameter:
